@@ -4,6 +4,7 @@
 # dependencies = [
 # "matplotlib",
 # "pyserial",
+# "strictyaml",
 # ]
 # ///
 
@@ -14,6 +15,7 @@ import re
 import os
 import stat
 import traceback
+import strictyaml
 import tkinter as tk
 from functools import wraps
 
@@ -29,6 +31,9 @@ class DataLine():
     items: dict
 
 class FrameParser:
+    def __init__(self, cfg):
+        self.cfg = cfg
+
     def parse_meas_line(self, line: str) -> DataLine:
         if not line.startswith('[meas] '):
             sys.stdout.write(line)
@@ -132,26 +137,13 @@ class FrameParser:
             # return self.frames_from_regular_file(filename)
             return self.frames_from_regular_file_noskip(filename)
 
-    def frames_from_args(self):
-        if len(sys.argv) == 1:
-            return self.frames_from_stdin()
-        elif len(sys.argv) == 2:
-            return self.frames_from_file(sys.argv[1])
-        else:
-            raise RuntimeError("unknown args (read the source pls)")
-
 class GraphAnimator():
-    def __init__(self, gen):
+    def __init__(self, gen, cfg):
+        self.cfg = cfg
+
         self.fig = plt.figure()
 
-        self.subplot_regexes = [
-            r'\/.*err.*',
-            r'\/.*torq.*',
-            r'\/.*vel.*',
-
-            r'',
-        ]
-        self.subplot_regexes = [re.compile(r) for r in self.subplot_regexes]
+        self.subplot_regexes = [re.compile(r) for r in self.cfg['subplot_regexes']]
 
         if len(self.subplot_regexes) == 0:
             raise RuntimeError("no subplots defined")
@@ -238,6 +230,30 @@ class GraphAnimator():
         )
         plt.show()
 
+
+    def frames_from_args(self):
+        if len(sys.argv) == 1:
+            return self.frames_from_stdin()
+        elif len(sys.argv) == 2:
+            return self.frames_from_file(sys.argv[1])
+        else:
+            raise RuntimeError("unknown args (read the source pls)")
+
+def parse_cfg(filename):
+    with open(filename, 'r') as f:
+        return strictyaml.load(f.read()).data
+
 if __name__ == '__main__':
-    fp = FrameParser()
-    GraphAnimator(fp.frames_from_args).animate()
+    if len(sys.argv) == 2:
+        cfg = parse_cfg(sys.argv[1])
+        fp = FrameParser(cfg)
+        gen = fp.frames_from_stdin
+    elif len(sys.argv) == 3:
+        cfg = parse_cfg(sys.argv[1])
+        fp = FrameParser(cfg)
+        gen = lambda: fp.frames_from_file(sys.argv[2])
+    else:
+        print(f'usage: {sys.argv[0]} <config file> [input file or serial port]')
+        os.exit(1)
+
+    GraphAnimator(gen, cfg).animate()
