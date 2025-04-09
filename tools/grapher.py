@@ -28,114 +28,117 @@ class DataLine():
     timestamp: float
     items: dict
 
-def parse_meas_line(line: str) -> DataLine:
-    if not line.startswith('[meas] '):
-        sys.stdout.write(line)
-        return None
+class FrameParser:
+    def parse_meas_line(self, line: str) -> DataLine:
+        if not line.startswith('[meas] '):
+            sys.stdout.write(line)
+            return None
 
-    line = line[len('[meas] '):]
-    tss, line = line.split(':', 1)
-    ts = int(tss) / 1000000.0
+        line = line[len('[meas] '):]
+        tss, line = line.split(':', 1)
+        ts = int(tss) / 1000000.0
 
-    try:
-        items = [x.strip() for x in line.split(';')]
-        items = [x for x in items if x]
-        items = dict([tuple([s.strip() for s in x.split(':')]) for x in items])
-        items = {k: parse_val(v) for k, v in items.items()}
-    except ValueError:
-        print('received corrupted data: ' + line)
-        return None # received corrupted text
+        try:
+            items = [x.strip() for x in line.split(';')]
+            items = [x for x in items if x]
+            items = dict([tuple([s.strip() for s in x.split(':')]) for x in items])
+            items = {k: self.parse_val(v) for k, v in items.items()}
+        except ValueError:
+            print('received corrupted data: ' + line)
+            return None # received corrupted text
 
-    return DataLine(timestamp=ts, items=items)
+        return DataLine(timestamp=ts, items=items)
 
-def parse_val(s):
-    try:
-        return float(s)
-    except:
-        return s
-
-def read_line_from_stream(ser):
-    s = ''
-    while True:
-        c = ser.read(1)
-        if type(c) is not str:
-            c = c.decode('utf-8')
-        s += c
-        if c in ('\r', '\n'):
+    def parse_val(self, s):
+        try:
+            return float(s)
+        except:
             return s
 
-def frames_from_stream(f):
-    while True:
-        line = read_line_from_stream(f)
-        dataline = parse_meas_line(line)
-        if dataline:
-            yield [dataline]
-
-def frames_from_serial(port):
-    ser = serial.Serial(port)
-    return frames_from_stream(ser)
-
-def frames_from_pipe(filename):
-    with open(filename, 'r') as f:
-        return frames_from_stream(f)
-
-def frames_from_stdin():
-    return frames_from_stream(sys.stdin)
-
-def frames_from_regular_file(filename):
-    with open(filename, 'rb') as f:
-        max_line_len = 2
+    def read_line_from_stream(self, ser):
+        s = ''
         while True:
-            pos = f.seek(-max_line_len, os.SEEK_END)
-            lines = f.read().decode('utf-8').splitlines()
-            if len(lines) < 2:
-                if pos == 0:
-                    raise RuntimeError('no newlines in input file?')
-                max_line_len *= 2
-                sys.stderr.write(f'bumping line size to {max_line_len}\n')
-                continue
+            c = ser.read(1)
+            if type(c) is not str:
+                c = c.decode('utf-8')
+            s += c
+            if c in ('\r', '\n'):
+                return s
 
-            dataline = parse_meas_line(lines[-1])
+    def frames_from_stream(self, f):
+        while True:
+            line = read_line_from_stream(f)
+            dataline = self.parse_meas_line(line)
             if dataline:
                 yield [dataline]
 
-def frames_from_regular_file_noskip(filename):
-    with open(filename, 'rb') as f:
-        while True:
-            data = f.read()
-            if len(data) == 0:
-                # maybe file was truncated?
-                cur_pos = f.seek(0, os.SEEK_CUR)
-                end_pos = f.seek(0, os.SEEK_END)
-                if cur_pos > end_pos:
-                    print('input file was truncated, re-reading')
-                    f.seek(0, os.SEEK_SET)
-                else:
-                    # file was not truncated, continue from where we left off
-                    f.seek(cur_pos, os.SEEK_SET)
-                continue
-            lines = data.decode('utf-8').splitlines()
-            datalines = (parse_meas_line(line) for line in lines)
-            ok_datalines = [dl for dl in datalines if dl]
-            yield ok_datalines
+    def frames_from_serial(self, port):
+        ser = serial.Serial(port)
+        return self.frames_from_stream(ser)
 
-def frames_from_file(filename):
-    mode = os.lstat(filename).st_mode
-    if stat.S_ISFIFO(mode):
-        return frames_from_pipe(filename)
-    elif stat.S_ISCHR(mode):
-        return frames_from_serial(filename)
-    else:
-        # return frames_from_regular_file(filename)
-        return frames_from_regular_file_noskip(filename)
+    def frames_from_pipe(self, filename):
+        with open(filename, 'r') as f:
+            return self.frames_from_stream(f)
 
-def frames_from_args():
-    if len(sys.argv) == 1:
-        return frames_from_stdin()
-    elif len(sys.argv) == 2:
-        return frames_from_file(sys.argv[1])
-    else:
-        raise RuntimeError("unknown args (read the source pls)")
+    def frames_from_stdin(self, ):
+        return self.frames_from_stream(sys.stdin)
+
+    def frames_from_regular_file(self, filename):
+        with open(filename, 'rb') as f:
+            max_line_len = 2
+            while True:
+                pos = f.seek(-max_line_len, os.SEEK_END)
+                lines = f.read().decode('utf-8').splitlines()
+                if len(lines) < 2:
+                    if pos == 0:
+                        raise RuntimeError('no newlines in input file?')
+                    max_line_len *= 2
+                    sys.stderr.write(f'bumping line size to {max_line_len}\n')
+                    continue
+
+                dataline = self.parse_meas_line(lines[-1])
+                if dataline:
+                    yield [dataline]
+
+    def frames_from_regular_file_noskip(self, filename):
+        with open(filename, 'rb') as f:
+            while True:
+                data = f.read()
+                if len(data) == 0:
+                    # maybe file was truncated?
+                    cur_pos = f.seek(0, os.SEEK_CUR)
+                    end_pos = f.seek(0, os.SEEK_END)
+                    if cur_pos > end_pos:
+                        print(f'input file was truncated (cur {cur_pos}, end {end_pos}), re-reading')
+                        f.seek(0, os.SEEK_SET)
+                    else:
+                        # file was not truncated, continue from where we left off
+                        f.seek(cur_pos, os.SEEK_SET)
+                    yield []
+                    continue
+
+                lines = data.decode('utf-8').splitlines()
+                datalines = (self.parse_meas_line(line) for line in lines)
+                ok_datalines = [dl for dl in datalines if dl]
+                yield ok_datalines
+
+    def frames_from_file(self, filename):
+        mode = os.lstat(filename).st_mode
+        if stat.S_ISFIFO(mode):
+            return self.frames_from_pipe(filename)
+        elif stat.S_ISCHR(mode):
+            return self.frames_from_serial(filename)
+        else:
+            # return self.frames_from_regular_file(filename)
+            return self.frames_from_regular_file_noskip(filename)
+
+    def frames_from_args(self):
+        if len(sys.argv) == 1:
+            return self.frames_from_stdin()
+        elif len(sys.argv) == 2:
+            return self.frames_from_file(sys.argv[1])
+        else:
+            raise RuntimeError("unknown args (read the source pls)")
 
 class GraphAnimator():
     def __init__(self, gen):
@@ -172,12 +175,12 @@ class GraphAnimator():
         updated_keys = set()
         reset_keys = set()
 
-        cur_ts = max((dataline.timestamp for dataline in datalines))
-        if cur_ts < self.prev_ts:
-            self.timetravel_keys |= set(self.val_sequences.keys())
-        self.prev_ts = cur_ts
-
         for dataline in datalines:
+            cur_ts = dataline.timestamp
+            if cur_ts < self.prev_ts:
+                self.timetravel_keys |= set(self.val_sequences.keys())
+            self.prev_ts = cur_ts
+
             for k, v in dataline.items.items():
                 if k in self.val_sequences:
                     if k in self.timetravel_keys:
@@ -235,4 +238,6 @@ class GraphAnimator():
         )
         plt.show()
 
-GraphAnimator(frames_from_args).animate()
+if __name__ == '__main__':
+    fp = FrameParser()
+    GraphAnimator(fp.frames_from_args).animate()
