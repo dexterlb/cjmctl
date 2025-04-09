@@ -4,6 +4,8 @@
 #include "math_utils.h"
 
 void estimator_velocity_init(estimator_velocity_t *est, estimator_velocity_cfg_t* cfg) {
+    est->cfg = cfg;
+
     est->x[0] = cfg->init_pos;
     est->x[1] = cfg->init_vel;
     est->x[2] = cfg->init_acc;
@@ -26,7 +28,7 @@ void estimator_velocity_init(estimator_velocity_t *est, estimator_velocity_cfg_t
 void estimator_velocity_update_dflt(estimator_velocity_t *est, float measured_pos, uint32_t now_us) {
     float dt = calc_dt_from_timestamps_us(est->now_us, now_us);
     est->now_us = now_us;
-    if (dt < 0) {
+    if (dt <= 0) {
         return;
     }
 
@@ -36,7 +38,7 @@ void estimator_velocity_update_dflt(estimator_velocity_t *est, float measured_po
 void estimator_velocity_update(estimator_velocity_t *est, float measured_pos, uint32_t now_us, float measurement_var, float process_var) {
     float dt = calc_dt_from_timestamps_us(est->now_us, now_us);
     est->now_us = now_us;
-    if (dt < 0) {
+    if (dt <= 0) {
         return;
     }
 
