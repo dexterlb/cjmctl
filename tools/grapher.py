@@ -67,20 +67,27 @@ class FrameParser:
         while True:
             c = ser.read(1)
             if type(c) is not str:
-                c = c.decode('utf-8')
+                try:
+                    c = c.decode('ascii')
+                except:
+                    c = '?'
             s += c
             if c in ('\r', '\n'):
                 return s
 
     def frames_from_stream(self, f):
         while True:
-            line = read_line_from_stream(f)
+            line = self.read_line_from_stream(f)
             dataline = self.parse_meas_line(line)
             if dataline:
                 yield [dataline]
 
     def frames_from_serial(self, port):
-        ser = serial.Serial(port)
+        try:
+            baud = self.cfg['serial_baud']
+        except KeyError:
+            baud = 9600
+        ser = serial.Serial(port, baud)
         return self.frames_from_stream(ser)
 
     def frames_from_pipe(self, filename):
