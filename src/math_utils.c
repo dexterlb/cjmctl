@@ -120,7 +120,7 @@ void matrix_elementwise_mul_3x3(float result[3][3], const float A[3][3], const f
 
 // Time utils
 float calc_dt_from_timestamps_us(uint32_t then, uint32_t now) {
-    uint32_t diff = then - now;
+    uint32_t diff = now - then;
     if (diff > UINT32_MAX / 2) {
         // something is definitely wrong
         return -INFINITY;
