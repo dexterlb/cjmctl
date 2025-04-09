@@ -33,20 +33,22 @@ class DataLine():
 class FrameParser:
     def __init__(self, cfg):
         self.cfg = cfg
+        self.dataline_regex = re.compile(self.cfg['dataline_regex'])
+        self.keyval_regex = re.compile(self.cfg['keyval_regex'])
+        self.timestamp_regex = re.compile(self.cfg['timestamp_regex'])
 
     def parse_meas_line(self, line: str) -> DataLine:
-        if not line.startswith('[meas] '):
-            sys.stdout.write(line)
+        if not self.dataline_regex.search(line):
+            sys.stdout.write(line.replace('\r\n', '\n').replace('\r', '\n') + '\n')
             return None
 
-        line = line[len('[meas] '):]
-        tss, line = line.split(':', 1)
-        ts = int(tss) / 1000000.0
 
         try:
-            items = [x.strip() for x in line.split(';')]
-            items = [x for x in items if x]
-            items = dict([tuple([s.strip() for s in x.split(':')]) for x in items])
+            tss = self.timestamp_regex.search(line).group(1)
+            ts = float(tss) * float(self.cfg['timestamp_multiplier'])
+
+            items = {m.group('key'): m.group('value') for m in self.keyval_regex.finditer(line)}
+            items = {k: v for k, v in items.items() if v}
             items = {k: self.parse_val(v) for k, v in items.items()}
         except ValueError:
             print('received corrupted data: ' + line)
@@ -58,7 +60,7 @@ class FrameParser:
         try:
             return float(s)
         except:
-            return s
+            return s.strip()
 
     def read_line_from_stream(self, ser):
         s = ''
