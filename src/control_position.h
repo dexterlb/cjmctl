@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 typedef struct {
     float vel_coast;
@@ -11,7 +12,8 @@ typedef struct {
 
     // state
     float pos_err;
-    float now;
+    uint32_t now_us;
+    bool target_reached;
 
     // params
     float pos_target;
@@ -26,6 +28,6 @@ typedef struct {
 // WARNING: this library is unfinished and does not work! do not use yet!
 
 void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg);
-void control_position_update(control_position_t* cpos, float dt);
+void control_position_update(control_position_t* cpos, uint32_t now_us);
 void control_position_report_pos(control_position_t* cpos, float pos);
 void control_position_target_pos(control_position_t* cpos, float pos);
