@@ -13,9 +13,6 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 }
 
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
-    // float dt = now - cvel->now;
-    // cvel->now = now;
-
     float dt = calc_dt_from_timestamps_us(cvel->now_us, now_us);
     cvel->now_us = now_us;
     if (dt <= 0) {
@@ -48,16 +45,17 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
         cvel->is_stopped = false;
         cvel->rest_timer = now_us;
         cvel->rest_integral = 0;
-    }
-
-    // a very overengineered solution to ramping down torque when stopping
-    // since torque goes up and down a lot while holding position, it must
-    // be averaged before we begin ramping it down
-    if (!cvel->is_stopped && now_us - cvel->rest_timer > cvel->cfg->rest_timeout) {
-        cvel->torque_output = cvel->rest_integral / (cvel->rest_timer * 0.3);
-        cvel->is_stopped = true;
-    } else if (!cvel->is_stopped && now_us - cvel->rest_timer > cvel->cfg->rest_timeout * 0.7) {
-        cvel->rest_integral += cvel->torque_output * dt;
+    } else {
+        // a very overengineered solution to ramping down torque when stopping
+        // since torque goes up and down a lot while holding position, it must
+        // be averaged before we begin ramping it down
+        float time_elapsed_in_rest = calc_dt_from_timestamps_us(cvel->rest_timer, now_us);
+        if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout) {
+            cvel->torque_output = cvel->rest_integral / (cvel->rest_timer * 0.3);
+            cvel->is_stopped = true;
+        } else if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout * 0.7) {
+            cvel->rest_integral += cvel->torque_output * dt;
+        }
     }
 
     // go limp if we're stopped
