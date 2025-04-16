@@ -13,6 +13,8 @@ typedef struct {
     float init_acc;
     float default_process_variance;
     float default_measurement_variance;
+    float vel_est_stride;
+    float max_possible_vel;
 } estimator_velocity_cfg_t;
 
 typedef struct {
@@ -28,6 +30,8 @@ typedef struct {
     };
     float state[3][3];
 
+    float vel_est_min;
+    float vel_est_max;
     uint32_t now_us;
 } estimator_velocity_t;
 

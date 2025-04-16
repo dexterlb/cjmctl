@@ -10,6 +10,9 @@ void estimator_velocity_init(estimator_velocity_t *est, estimator_velocity_cfg_t
     est->x[1] = cfg->init_vel;
     est->x[2] = cfg->init_acc;
 
+    est->vel_est_max = cfg->init_vel;
+    est->vel_est_min = cfg->init_vel;
+    
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             if (i == j) {
@@ -99,4 +102,20 @@ void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos,
     matrix_elementwise_mul_3x3(KH_P, KH, state_covariance_pred);
 
     matrix_sub_3x3(est->state, state_covariance_pred, KH_P);
+
+    if(est->out.vel_estimate < est->vel_est_min)
+    {
+        est->vel_est_min = est->out.vel_estimate;
+    } else {
+        est->vel_est_min = linear_ramp_to(est->vel_est_min, est->cfg->vel_est_stride * dt, est->out.vel_estimate); 
+    }
+
+    est->out.vel_estimate = clampf(est->out.vel_estimate, -est->cfg->max_possible_vel, est->cfg->max_possible_vel);
+
+    if(est->out.vel_estimate > est->vel_est_max)
+    {
+        est->vel_est_max = est->out.vel_estimate;
+    } else {
+        est->vel_est_max = linear_ramp_to(est->vel_est_max, est->cfg->vel_est_stride * dt, est->out.vel_estimate); 
+    }
 }

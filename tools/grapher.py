@@ -5,6 +5,7 @@
 # "matplotlib",
 # "pyserial",
 # "strictyaml",
+# "PyQt6"
 # ]
 # ///
 
@@ -260,9 +261,10 @@ if __name__ == '__main__':
     elif len(sys.argv) == 3:
         cfg = parse_cfg(sys.argv[1])
         fp = FrameParser(cfg)
-        gen = lambda: fp.frames_from_file(sys.argv[2])
+        gen = fp.frames_from_file(sys.argv[2])
+        gengen = lambda: gen
     else:
         print(f'usage: {sys.argv[0]} <config file> [input file or serial port]')
         exit(1)
 
-    GraphAnimator(gen, cfg).animate()
+    GraphAnimator(gengen, cfg).animate()

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 typedef struct {
     // General configuration
@@ -27,7 +28,7 @@ typedef struct {
     float vel_err;
     float rest_timer;
     float rest_integral;
-    float now;
+    uint32_t now_us;
 
     // params
     float vel_target;
@@ -51,6 +52,6 @@ typedef struct {
 // If you don't want to ramp, use INFINITY as ramp_speed.
 
 void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg);
-void control_velocity_update(control_velocity_t* cvel, float now);
+void control_velocity_update(control_velocity_t* cvel, uint32_t now_us);
 void control_velocity_report_vel(control_velocity_t* cvel, float vel);
 void control_velocity_target_vel(control_velocity_t* cvel, float vel, float ramp_speed);
