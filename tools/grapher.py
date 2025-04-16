@@ -265,6 +265,6 @@ if __name__ == '__main__':
         gengen = lambda: gen
     else:
         print(f'usage: {sys.argv[0]} <config file> [input file or serial port]')
-        os.exit(1)
+        exit(1)
 
     GraphAnimator(gengen, cfg).animate()
