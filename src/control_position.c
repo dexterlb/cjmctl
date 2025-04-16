@@ -2,6 +2,8 @@
 #include "control_position.h"
 #include "math_utils.h"
 
+void control_position_check_target_reached(control_position_t* cpos);
+
 void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg) {
     cpos->cfg = cfg;
     cpos->pos_measured = 0;
@@ -9,6 +11,7 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
     cpos->pos_err = 0;
     cpos->now_us = 0;
     cpos->target_reached = true;
+    cpos->target_reached_timestamp = 0;
 }
 
 void control_position_update(control_position_t* cpos, uint32_t now_us) {
@@ -22,6 +25,11 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
         return;
     }
 
+    if (cpos->target_reached) {
+        cpos->vel_output = 0;
+        return;
+    }
+
     cpos->pos_err = cpos->pos_target - cpos->pos_measured;
 
     float prop_out = cpos->cfg->pos_gain * dt * cpos->pos_err;
@@ -31,7 +39,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
         -cpos->cfg->vel_coast, cpos->cfg->vel_coast
     );
 
-    // update target reached
+    control_position_check_target_reached(cpos);
     cpos->vel_output = prop_out;
 }
 
@@ -44,4 +52,23 @@ void control_position_target_pos(control_position_t* cpos, float pos) {
     cpos->target_reached = false;
 }
 
+void control_position_check_target_reached(control_position_t* cpos) {
+    float window = cpos->cfg->target_reached_window;
+    if (window == 0.0f) {
+        // user requested to never testify that target is reached
+        return;
+    }
 
+    if (fabs(cpos->pos_measured - cpos->pos_target) >= window) {
+        // we aren't close enough to the target
+        cpos->target_reached_timestamp = cpos->now_us;
+        return;
+    }
+
+    if (cpos->now_us - cpos->target_reached_timestamp <= cpos->cfg->target_reached_time_us) {
+        // we haven't yet spent enough time in the "reached" window
+        return;
+    }
+
+    cpos->target_reached = true;
+}

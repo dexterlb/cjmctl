@@ -5,6 +5,9 @@ typedef struct {
     float vel_coast;
 
     float pos_gain;
+
+    uint32_t target_reached_time_us;
+    float target_reached_window;        // use 0 to never assume target is reached
 } control_position_cfg_t;
 
 typedef struct {
@@ -13,7 +16,7 @@ typedef struct {
     // state
     float pos_err;
     uint32_t now_us;
-    bool target_reached;
+    uint32_t target_reached_timestamp;
 
     // params
     float pos_target;
@@ -23,9 +26,8 @@ typedef struct {
 
     // outputs
     float vel_output;
+    bool target_reached;
 } control_position_t;
-
-// WARNING: this library is unfinished and does not work! do not use yet!
 
 void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg);
 void control_position_update(control_position_t* cpos, uint32_t now_us);
