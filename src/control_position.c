@@ -21,7 +21,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
         return;
     }
 
-    if (cpos->now_us != 0) {
+    if (!isnormal(dt)) {
         return;
     }
 
@@ -32,7 +32,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
     cpos->pos_err = cpos->pos_target - cpos->pos_measured;
 
-    float prop_out = cpos->cfg->pos_gain * dt * cpos->pos_err;
+    float prop_out = cpos->cfg->pos_gain * cpos->pos_err;
 
     prop_out = clampf(
         prop_out,
@@ -41,6 +41,10 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
     control_position_check_target_reached(cpos);
     cpos->vel_output = prop_out;
+
+    if (fabs(cpos->pos_err) > cpos->cfg->vel_min_window && fabs(cpos->vel_output) < cpos->cfg->vel_min) {
+        cpos->vel_output = cpos->cfg->vel_min * signf(cpos->vel_output);
+    }
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {

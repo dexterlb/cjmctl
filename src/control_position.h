@@ -3,6 +3,8 @@
 
 typedef struct {
     float vel_coast;
+    float vel_min;
+    float vel_min_window;
 
     float pos_gain;
 
