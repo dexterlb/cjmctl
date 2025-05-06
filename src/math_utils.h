@@ -8,6 +8,8 @@ float signf(float x);
 float clampf(float x, float min, float max);
 float maxf(float a, float b);
 float minf(float a, float b);
+uint16_t float_to_fixed(float v, float min, float max);
+float fixed_to_float(uint16_t val, float min, float max);
 
 // Vector algebra
 void vec3_add(float result[3], const float a[3], const float b[3]);
