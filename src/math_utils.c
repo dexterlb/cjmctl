@@ -37,7 +37,7 @@ float maxf(float a, float b) {
 uint16_t float_to_fixed(float v, float min, float max) {
     float val = ((v - min) / (max - min)) * 65535.0f;
     if (val < 0.0f || val > 65535.0f) {
-        return INFINITY;
+        return 0;
     }
     return (uint16_t)(val + 0.5f);
 }
