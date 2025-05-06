@@ -1,5 +1,5 @@
 #include "math_utils.h"
-
+#include <stdint.h>
 #include <math.h>
 
 // Scalar operations
@@ -32,6 +32,18 @@ float maxf(float a, float b) {
         return a;
     }
     return b;
+}
+
+uint16_t float_to_fixed(float v, float min, float max) {
+    float val = ((v - min) / (max - min)) * 65535.0f;
+    if (val < 0.0f || val > 65535.0f) {
+        return INFINITY;
+    }
+    return (uint16_t)(val + 0.5f);
+}
+
+float fixed_to_float(uint16_t val, float min, float max) {
+    return ((float)val / 65535.0f) * (max - min) + min;
 }
 
 // Ramps
