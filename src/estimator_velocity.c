@@ -103,14 +103,14 @@ void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos,
 
     matrix_sub_3x3(est->state, state_covariance_pred, KH_P);
 
+    est->out.vel_estimate = clampf(est->out.vel_estimate, -est->cfg->max_possible_vel, est->cfg->max_possible_vel);
+
     if(est->out.vel_estimate < est->vel_est_min)
     {
         est->vel_est_min = est->out.vel_estimate;
     } else {
         est->vel_est_min = linear_ramp_to(est->vel_est_min, est->cfg->vel_est_stride * dt, est->out.vel_estimate); 
     }
-
-    est->out.vel_estimate = clampf(est->out.vel_estimate, -est->cfg->max_possible_vel, est->cfg->max_possible_vel);
 
     if(est->out.vel_estimate > est->vel_est_max)
     {
