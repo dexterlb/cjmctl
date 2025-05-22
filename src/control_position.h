@@ -20,6 +20,7 @@ typedef struct {
     float pos_err;
     uint32_t now_us;
     uint32_t target_reached_timestamp;
+    float pos_start;
 
     // params
     float pos_target;
