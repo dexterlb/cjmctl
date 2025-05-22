@@ -12,6 +12,7 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
     cpos->now_us = 0;
     cpos->target_reached = true;
     cpos->target_reached_timestamp = 0;
+    cpos->vel_coast = cfg->vel_coast;
 }
 
 void control_position_update(control_position_t* cpos, uint32_t now_us) {
@@ -36,7 +37,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
     prop_out = clampf(
         prop_out,
-        -cpos->cfg->vel_coast, cpos->cfg->vel_coast
+        -cpos->vel_coast, cpos->vel_coast
     );
 
     control_position_check_target_reached(cpos);
@@ -49,6 +50,14 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 void control_position_report_pos(control_position_t* cpos, float pos) {
     cpos->pos_measured = pos;
+}
+
+void control_position_set_coast_vel(control_position_t* cpos, float vel) {
+    cpos->vel_coast = clampf(
+        vel,
+        cpos->cfg->vel_min,
+        cpos->cfg->vel_coast
+    );
 }
 
 void control_position_target_pos(control_position_t* cpos, float pos) {
