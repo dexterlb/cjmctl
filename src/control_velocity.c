@@ -6,10 +6,14 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
     cvel->vel_target = 0;
     cvel->vel_target_preramp = 0;
     cvel->vel_measured = 0;
+    cvel->vel_err = 0;
     cvel->vel_err_integral = 0;
     cvel->torque_output = 0;
     cvel->is_stopped = true;
     cvel->now_us = 0;
+    cvel->rest_timer = 0;
+    cvel->rest_integral = 0;
+    cvel->ramp_speed = INFINITY;
 }
 
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
@@ -61,6 +65,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
     // go limp if we're stopped
     if (cvel->is_stopped) {
         cvel->vel_target = 0;
+        cvel->vel_err = 0;
         cvel->vel_err_integral = 0;
         cvel->torque_output = linear_ramp_to(
             cvel->torque_output,

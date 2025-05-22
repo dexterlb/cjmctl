@@ -14,6 +14,7 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
     cpos->target_reached = true;
     cpos->target_reached_timestamp = 0;
     cpos->vel_coast = cfg->vel_coast;
+    cpos->vel_output = 0;
 }
 
 void control_position_update(control_position_t* cpos, uint32_t now_us) {
