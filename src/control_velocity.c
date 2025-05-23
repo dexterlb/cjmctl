@@ -29,12 +29,14 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 
     // determine velocity target
     float vel_min = maxf(cvel->cfg->vel_min, 0.00001);
-    if (fabs(cvel->vel_target_preramp) < vel_min) {
-        // requested speed is too low, just stop
-        cvel->vel_target = 0;
-    } else if (fabs(cvel->vel_target) < vel_min) {
-        // do not ramp below the min speed
-        cvel->vel_target = vel_min * signf(cvel->vel_target_preramp);
+    if (fabs(cvel->vel_target) < vel_min) {
+        if (fabs(cvel->vel_target_preramp) < vel_min) {
+            // requested speed is too low, just stop
+            cvel->vel_target = 0;
+        } else {
+            // do not ramp below the min speed
+            cvel->vel_target = vel_min * signf(cvel->vel_target_preramp);
+        }
     } else {
         // ramp the target velocity towards the preramp target
         cvel->vel_target = linear_ramp_to(
