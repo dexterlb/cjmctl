@@ -37,29 +37,28 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
     float prop_out = cpos->cfg->pos_gain * cpos->pos_err;
 
+    float shifted_vel_coast = maxf(
+        // it is important that we don't go over the max vel_coast, even if the user said so
+        minf(cpos->vel_coast, cpos->cfg->vel_coast) - cpos->cfg->vel_min,
+        0
+    );
+
     // The following is a hack that makes the proportional controller act as a
     // trapezoidal trajectory planner.
     // In the future we should throw it out and make a proper constant-jerk
     // trajectory planner.
     float start_accel_limit_out = fabs(cpos->cfg->pos_gain * (cpos->pos_measured - cpos->pos_start));
-    float vel_limit = clampf(
-        minf(cpos->vel_coast, start_accel_limit_out),
-        cpos->cfg->vel_min,
-        cpos->cfg->vel_coast    // it is important that we don't go over the max vel_coast, even if the user said so
-    );
+    float vel_limit = minf(shifted_vel_coast, start_accel_limit_out);
 
     prop_out = clampf(
         prop_out,
         -vel_limit, vel_limit
     );
 
+    prop_out += cpos->cfg->vel_min * signf(prop_out);
 
     control_position_check_target_reached(cpos);
     cpos->vel_output = prop_out;
-
-    if (fabs(cpos->pos_err) > cpos->cfg->vel_min_window && fabs(cpos->vel_output) < cpos->cfg->vel_min) {
-        cpos->vel_output = cpos->cfg->vel_min * signf(cpos->vel_output);
-    }
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {

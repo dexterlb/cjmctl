@@ -4,12 +4,12 @@
 typedef struct {
     float vel_coast;                    // default and maximum coast velocity (can be reduced dynamically)
     float vel_min;
-    float vel_min_window;
 
     float pos_gain;
 
-    uint32_t target_reached_time_us;
     float target_reached_window;        // use 0 to never assume target is reached
+    uint32_t target_reached_time_us;    // timestamp must be small enough so that we don't leave the window
+                                        // while moving at vel_min for the given time
 } control_position_cfg_t;
 
 typedef struct {
