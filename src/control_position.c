@@ -50,12 +50,13 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
     float start_accel_limit_out = fabs(cpos->cfg->pos_gain * (cpos->pos_measured - cpos->pos_start));
     float vel_limit = minf(shifted_vel_coast, start_accel_limit_out);
 
+    float prop_sign = signf(prop_out);
     prop_out = clampf(
         prop_out,
         -vel_limit, vel_limit
     );
 
-    prop_out += cpos->cfg->vel_min * signf(prop_out);
+    prop_out += cpos->cfg->vel_min * prop_sign;
 
     control_position_check_target_reached(cpos);
     cpos->vel_output = prop_out;
