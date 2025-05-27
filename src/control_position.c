@@ -75,7 +75,7 @@ void control_position_target_pos(control_position_t* cpos, float pos) {
     // pos_start is the position at which we would have started if vel_output was 0
     // when we started and we had accelerated to the current value of vel_output
     // (in the normal case, when vel_output is 0, pos_start is the current position)
-    cpos->pos_start = cpos->pos_measured - cpos->vel_output * cpos->cfg->pos_gain;
+    cpos->pos_start = cpos->pos_measured - cpos->vel_output / cpos->cfg->pos_gain;
     cpos->target_reached = false;
 }
 
