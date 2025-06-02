@@ -11,8 +11,10 @@ typedef struct {
     float init_pos;
     float init_vel;
     float init_acc;
-    float default_process_variance;
-    float default_measurement_variance;
+    float process_noise_pos;
+    float process_noise_vel;
+    float process_noise_acc;
+    float measurement_noise_pos;
     float vel_est_stride;
     float max_possible_vel;
 } estimator_velocity_cfg_t;
@@ -37,10 +39,5 @@ typedef struct {
 
 void estimator_velocity_init(estimator_velocity_t* est, estimator_velocity_cfg_t* cfg);
 
-
-// All of the following functions do the same, they just take parameters differently
-void estimator_velocity_update_dflt(estimator_velocity_t *est, float measured_pos, uint32_t now_us);
-void estimator_velocity_update(estimator_velocity_t *est, float measured_pos, uint32_t now_us, float measurement_var, float process_var);
-
-void estimator_velocity_update_dt_dflt(estimator_velocity_t *est, float measured_pos, float dt);
-void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos, float dt, float measurement_var, float process_var);
+void estimator_velocity_update(estimator_velocity_t *est, float measured_pos, uint32_t now_us);
+void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos, float dt);

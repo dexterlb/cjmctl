@@ -77,6 +77,14 @@ void vec3_outer_product(float result[3][3], const float a[3], const float b[3]) 
     }
 }
 
+float vec3_dot_product(const float a[3], const float b[3]) {
+    float res = 0;
+    for (int i = 0; i < 3; i++) {
+        res += a[i] * b[i];
+    }
+    return res;
+}
+
 // Matrix Algebra
 void mat3x3_mul(float result[3][3], const float A[3][3], const float B[3][3]) {
     for (int i = 0; i < 3; ++i) {
@@ -126,6 +134,14 @@ void matrix_elementwise_mul_3x3(float result[3][3], const float A[3][3], const f
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             result[i][j] = A[i][j] * B[i][j];
+        }
+    }
+}
+
+void mat3x3_add_scalar(float result[3][3], const float A[3][3], const float scalar) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            result[i][j] = A[i][j] + scalar;
         }
     }
 }

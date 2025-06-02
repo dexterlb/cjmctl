@@ -24,14 +24,16 @@ void update_estimator(estimator_velocity_t* estimator, uint32_t timestamp, float
         cfg.init_pos = input_pos;
         cfg.init_vel = 0;
         cfg.init_acc = 0;
-        cfg.default_process_variance = 1000;
-        cfg.default_measurement_variance = 1;
+        cfg.process_noise_pos = 0.1f;
+        cfg.process_noise_vel = 1000.0f;
+        cfg.process_noise_acc = 2000.0f;
+        cfg.measurement_noise_pos = 1.0f;
         cfg.vel_est_stride = INFINITY;
         cfg.max_possible_vel = INFINITY;
         estimator_velocity_init(estimator, &cfg);
     }
 
-    estimator_velocity_update_dflt(estimator, input_pos, timestamp);
+    estimator_velocity_update(estimator, input_pos, timestamp);
 }
 
 void process_line(const char* line, estimator_velocity_t* estimator) {
