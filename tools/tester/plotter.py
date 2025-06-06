@@ -29,6 +29,8 @@ for line in (line for line in p.stdout.split('\n') if line):  # I <3 python
 
 sub_timestamps, pos_estimates, vel_estimates, acc_estimates = list(zip(*results))
 
+sys.stderr.write(p.stderr)
+
 for i, (ts, sub_ts) in enumerate(zip(timestamps, sub_timestamps)):
     if abs(ts - sub_ts) < 0.0000001:
         raise RuntimeError(f"uhh, something's wrong (timestamp {i} is supposed to be {ts} but is actually {sub_ts}")

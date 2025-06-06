@@ -41,7 +41,7 @@ void process_line(const char* line, estimator_velocity_t* estimator) {
     float input_pos;
 
     sscanf(line, "%f %f", &timestamp, &input_pos);
-
+    fprintf(stderr, "%f %f\n", timestamp, input_pos);
     update_estimator(estimator, timestamp, input_pos);
     dprintf(
         1, "%f %f %f %f\n",
