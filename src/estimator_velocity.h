@@ -2,10 +2,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-#define estimator_velocity_num_prev_positions 50
-
 #include <stdio.h>
+
+// https://thekalmanfilter.com/kalman-filter-explained-simply/
 
 typedef struct {
     float init_pos;

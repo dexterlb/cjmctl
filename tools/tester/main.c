@@ -23,7 +23,6 @@ void update_estimator(estimator_velocity_t* estimator, uint32_t timestamp_us, fl
 
     if (estimator->cfg == NULL) {
         // First measurement, initialize the estimator
-        dprintf(2, "Setting init pos to %.4f\n", input_pos);
         cfg.init_pos = input_pos;
         cfg.init_vel = 0.0f;
         cfg.init_acc = 0.0f;
@@ -31,10 +30,9 @@ void update_estimator(estimator_velocity_t* estimator, uint32_t timestamp_us, fl
         cfg.process_noise_vel = 1000.0f;
         cfg.process_noise_acc = 2000.0f;
         cfg.measurement_noise_pos = 1.0f;
+        cfg.max_possible_vel = 10;
         estimator_velocity_init(estimator, &cfg);
 
-        dprintf(2, "state Matrix (P):\n");
-        print_matrix_3x3(estimator->state);
         dprintf(2, "Vector X:\n");
         dprintf(2, "est pos %.4f: \n", estimator->out.pos_estimate);
         dprintf(2, "est vel %.4f: \n", estimator->out.vel_estimate);
@@ -61,7 +59,6 @@ void process_line(const char* line, estimator_velocity_t* estimator) {
         estimator->out.vel_estimate,
         estimator->out.acc_estimate
     );
-    // exit(0);
 }
 
 int main() {

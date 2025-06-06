@@ -26,6 +26,9 @@ void matrix_add_3x3(float result[3][3], const float A[3][3], const float B[3][3]
 void matrix_sub_3x3(float result[3][3], const float A[3][3], const float B[3][3]);
 void matrix_elementwise_mul_3x3(float result[3][3], const float A[3][3], const float B[3][3]);
 void mat3x3_add_scalar(float result[3][3], const float A[3][3], const float scalar);
+void mat3x3_mul_scalar(float result[3][3], const float A[3][3], const float scalar);
+void mat3x3_eye(float result[3][3]);
+
 
 // Ramps
 float linear_ramp_to(float x, float step, float target);

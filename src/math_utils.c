@@ -146,6 +146,26 @@ void mat3x3_add_scalar(float result[3][3], const float A[3][3], const float scal
     }
 }
 
+void mat3x3_mul_scalar(float result[3][3], const float A[3][3], const float scalar) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            result[i][j] = A[i][j] * scalar;
+        }
+    }
+}
+
+void mat3x3_eye(float result[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (i == j) {
+                result[i][j] = 1;
+            } else {
+                result[i][j] = 0;
+            }
+        }
+    }
+}
+
 // Time utils
 float calc_dt_from_timestamps_us(uint32_t then, uint32_t now) {
     uint32_t diff = now - then;
