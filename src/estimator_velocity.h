@@ -41,3 +41,5 @@ void estimator_velocity_init(estimator_velocity_t* est, estimator_velocity_cfg_t
 
 void estimator_velocity_update(estimator_velocity_t *est, float measured_pos, uint32_t now_us);
 void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos, float dt);
+
+void print_matrix_3x3(const float mat[3][3]);

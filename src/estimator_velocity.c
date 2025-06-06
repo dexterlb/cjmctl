@@ -1,11 +1,30 @@
 #include "estimator_velocity.h"
 
 #include <stdio.h>
+#include <err.h>
 #include "math_utils.h"
+
+static unsigned int P_cnt = 0;
+
+void print_matrix_3x3(const float mat[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        dprintf(2, "[ ");
+        for (int j = 0; j < 3; ++j) {
+            dprintf(2, "%8.4f ", mat[i][j]);
+        }
+        dprintf(2, "]\n");
+    }
+    dprintf(2, "\n");
+}
+
+void print_vec3f(const float v[3]) {
+    dprintf(2, "[%.4f, %.4f, %.4f]\n\n", v[0], v[1], v[2]);
+}
 
 void estimator_velocity_init(estimator_velocity_t *est, estimator_velocity_cfg_t* cfg) {
     est->cfg = cfg;
 
+    dprintf(2, "Setting x[0] to %.4f\n", cfg->init_pos);
     est->x[0] = cfg->init_pos;
     est->x[1] = cfg->init_vel;
     est->x[2] = cfg->init_acc;
@@ -29,10 +48,16 @@ void estimator_velocity_init(estimator_velocity_t *est, estimator_velocity_cfg_t
 }
 
 void estimator_velocity_update(estimator_velocity_t *est, float measured_pos, uint32_t now_us) {
-    float dt = calc_dt_from_timestamps_us(est->now_us, now_us);
-    est->now_us = now_us;
-    if (dt <= 0) {
-        return;
+    float dt;
+    if(est->now_us == UINT32_MAX) {
+        dt = 0;
+    } else {
+        dt = calc_dt_from_timestamps_us(est->now_us, now_us);
+        est->now_us = now_us;
+        if (dt <= 0) {
+            errx(1, "dt: %.6f\n", dt);
+            return;
+        }
     }
 
     estimator_velocity_update_dt(est, measured_pos, dt);
@@ -53,9 +78,21 @@ void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos,
 
     float x_pred[3];
     mat3x3_vec_mul(x_pred, state_transition, est->x); // F @ x
+    if(P_cnt < 1)
+    {
+        dprintf(2, "F:\n");
+        print_matrix_3x3(state_transition);
+        dprintf(2, "F @ x:\n");
+        print_vec3f(x_pred);
+    }
 
     float covariance_pred[3][3];
     mat3x3_mul(covariance_pred, state_transition, est->state); // F @ P
+    if(P_cnt < 1)
+    {
+        dprintf(2, "F @ P:\n");
+        print_matrix_3x3(covariance_pred);
+    }
 
     float state_transition_transp[3][3];    // I hope the optimiser makes this in-place
     mat3x3_transpose(state_transition_transp, state_transition); // F . T
@@ -70,6 +107,14 @@ void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos,
     };
 
     matrix_add_3x3(state_covariance_pred, state_covariance_pred, process_noise_covariance); // F @ P @ F.T + Q
+
+    if(P_cnt < 1)
+    {
+        dprintf(2, "p cnt:%d \n", P_cnt);
+        dprintf(2, "F @ P @ F.T + Q: \n");
+        print_matrix_3x3(state_covariance_pred);
+    }
+    P_cnt++;
 
     float H[3] = {1, 0, 0};
     // float y = measured_pos - x_pred[0];
