@@ -1,0 +1,30 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: AlignWithSpaces
+BreakBeforeBraces: Attach
+
+InsertBraces: true
+
+SpacesInParentheses: false
+
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound: false
+  PadOperators: false
+AlignConsecutiveDeclarations: Consecutive
+AlignTrailingComments: true
+AlignAfterOpenBracket: BlockIndent
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+ColumnLimit: 0
+
+SortIncludes: false
+
+LineEnding: LF

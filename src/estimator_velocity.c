@@ -1,121 +1,126 @@
 #include "estimator_velocity.h"
 
 #include <stdio.h>
+#include <err.h>
 #include "math_utils.h"
 
-void estimator_velocity_init(estimator_velocity_t *est, estimator_velocity_cfg_t* cfg) {
-    est->cfg = cfg;
+static unsigned int P_cnt              = 0;
+const unsigned int  printed_iterations = 1;
 
-    est->x[0] = cfg->init_pos;
-    est->x[1] = cfg->init_vel;
-    est->x[2] = cfg->init_acc;
-
-    est->vel_est_max = cfg->init_vel;
-    est->vel_est_min = cfg->init_vel;
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            if (i == j) {
-                est->state[i][j] = 1;
-            } else {
-                est->state[i][j] = 0;
-            }
-        }
-    }
-
-    est->state[0][0] = cfg->default_measurement_variance;
-
-    est->now_us = UINT32_MAX;
+void print_matrix_3x3(const float mat[3][3]) {
+	for (int i = 0; i < 3; ++i) {
+		dprintf(2, "[ ");
+		for (int j = 0; j < 3; ++j) {
+			dprintf(2, "%8.4f ", mat[i][j]);
+		}
+		dprintf(2, "]\n");
+	}
+	dprintf(2, "\n");
 }
 
-void estimator_velocity_update_dflt(estimator_velocity_t *est, float measured_pos, uint32_t now_us) {
-    float dt = calc_dt_from_timestamps_us(est->now_us, now_us);
-    est->now_us = now_us;
-    if (dt <= 0) {
-        return;
-    }
-
-    estimator_velocity_update_dt_dflt(est, measured_pos, dt);
+void print_vec3f(const float v[3]) {
+	dprintf(2, "[%.4f, %.4f, %.4f]\n\n", v[0], v[1], v[2]);
 }
 
-void estimator_velocity_update(estimator_velocity_t *est, float measured_pos, uint32_t now_us, float measurement_var, float process_var) {
-    float dt = calc_dt_from_timestamps_us(est->now_us, now_us);
-    est->now_us = now_us;
-    if (dt <= 0) {
-        return;
-    }
+void estimator_velocity_init(estimator_velocity_t* est, estimator_velocity_cfg_t* cfg) {
+	est->cfg = cfg;
 
-    estimator_velocity_update_dt(est, measured_pos, dt, measurement_var, process_var);
+	dprintf(2, "Setting x[0] to %.4f\n", cfg->init_pos);
+	est->x[0] = cfg->init_pos;
+	est->x[1] = cfg->init_vel;
+	est->x[2] = cfg->init_acc;
+
+	est->vel_est_max = cfg->init_vel;
+	est->vel_est_min = cfg->init_vel;
+
+	mat3x3_eye(est->state);
+
+	est->state[0][0] = cfg->measurement_noise_pos;
+
+	est->now_us = UINT32_MAX;
 }
 
-void estimator_velocity_update_dt_dflt(estimator_velocity_t *est, float measured_pos, float dt) {
-    estimator_velocity_update_dt(est, measured_pos, dt, est->cfg->default_measurement_variance, est->cfg->default_process_variance);
+void estimator_velocity_update(estimator_velocity_t* est, float measured_pos, uint32_t now_us) {
+	float dt    = calc_dt_from_timestamps_us(est->now_us, now_us);
+	est->now_us = now_us;
+	if (dt <= 0) {
+		return;
+	}
+
+	estimator_velocity_update_dt(est, measured_pos, dt);
 }
 
-void estimator_velocity_update_dt(estimator_velocity_t *est, float measured_pos, float dt, float measurement_var, float process_var) {
-    float state_transition[3][3] = {
-        // position, velocity and acceleration model
-        // pos = v0 * t + 0.5 * a * t^2
-        {1,     dt,      0.5f * dt * dt},
-        {0,      1,                  dt},
-        {0,      0,                   1}
-    };
+void estimator_velocity_update_dt(estimator_velocity_t* est, float measured_pos, float dt) {
+	float state_transition[3][3] = {
+		// position, velocity and acceleration model
+		// pos = v0 * t + 0.5 * a * t^2
+		{1, dt, 0.5f * dt * dt},
+		{0, 1, dt},
+		{0, 0, 1}
+	};
 
-    float x_pred[3];
-    mat3x3_vec_mul(x_pred, state_transition, est->x);
+	float x_pred[3];
+	mat3x3_vec_mul(x_pred, state_transition, est->x);
 
-    float covariance_pred[3][3];
-    mat3x3_mul(covariance_pred, state_transition, est->state);
+	float covariance_pred[3][3];
+	mat3x3_mul(covariance_pred, state_transition, est->state);
 
-    float state_transition_transp[3][3];    // I hope the optimiser makes this in-place
-    mat3x3_transpose(state_transition_transp, state_transition);
+	float state_transition_transp[3][3]; // I hope the optimiser makes this in-place
+	mat3x3_transpose(state_transition_transp, state_transition);
 
-    float state_covariance_pred[3][3];
-    mat3x3_mul(state_covariance_pred, covariance_pred, state_transition_transp);
+	float state_covariance_pred[3][3];
+	mat3x3_mul(state_covariance_pred, covariance_pred, state_transition_transp);
 
-    float noise_covariance[3][3] = {
-        {process_var, 0, 0},
-        {0, process_var, 0},
-        {0, 0, process_var}
-    };
+	float process_noise_covariance[3][3] = {
+		{est->cfg->process_noise_pos, 0, 0},
+		{0, est->cfg->process_noise_vel, 0},
+		{0, 0, est->cfg->process_noise_acc}
+	};
 
-    matrix_add_3x3(state_covariance_pred, state_covariance_pred, noise_covariance);
+	matrix_add_3x3(state_covariance_pred, state_covariance_pred, process_noise_covariance);
 
-    float H[3] = {1, 0, 0};
-    float y = measured_pos - x_pred[0];
-    float meas_covariance = state_covariance_pred[0][0] + measurement_var;
+	float H[3] = {1, 0, 0};
+	float y    = measured_pos - vec3_dot_product(H, x_pred);
 
-    float gain[3] = {
-        state_covariance_pred[0][0] / meas_covariance,
-        state_covariance_pred[1][0] / meas_covariance,
-        state_covariance_pred[2][0] / meas_covariance
-    };
+	float S;
+	float tmp_v[3];
+	mat3x3_vec_mul(tmp_v, state_covariance_pred, H); //
 
-    float contribution[3];
-    vec3_scalar_mul(contribution, gain, y);
-    vec3_add(est->x, x_pred, contribution);
+	S = vec3_dot_product(H, tmp_v);
+	S += est->cfg->measurement_noise_pos;
 
-    float KH[3][3];
-    vec3_outer_product(KH, gain, H);
+	float K[3];
+	vec3_scalar_mul(K, tmp_v, 1 / S);
 
-    float KH_P[3][3];
-    matrix_elementwise_mul_3x3(KH_P, KH, state_covariance_pred);
+	float offset_v[3];
+	vec3_scalar_mul(offset_v, K, y);
+	vec3_add(est->x, x_pred, offset_v);
 
-    matrix_sub_3x3(est->state, state_covariance_pred, KH_P);
+	float KH[3][3];
+	vec3_outer_product(KH, K, H);
 
-    est->out.vel_estimate = clampf(est->out.vel_estimate, -est->cfg->max_possible_vel, est->cfg->max_possible_vel);
+	float KH_neg[3][3];
+	mat3x3_mul_scalar(KH_neg, KH, -1);
 
-    if(est->out.vel_estimate < est->vel_est_min)
-    {
-        est->vel_est_min = est->out.vel_estimate;
-    } else {
-        est->vel_est_min = linear_ramp_to(est->vel_est_min, est->cfg->vel_est_stride * dt, est->out.vel_estimate);
-    }
+	float eye_matrix[3][3];
+	mat3x3_eye(eye_matrix);
 
-    if(est->out.vel_estimate > est->vel_est_max)
-    {
-        est->vel_est_max = est->out.vel_estimate;
-    } else {
-        est->vel_est_max = linear_ramp_to(est->vel_est_max, est->cfg->vel_est_stride * dt, est->out.vel_estimate);
-    }
+	float state_update_matrix[3][3];
+
+	matrix_add_3x3(state_update_matrix, eye_matrix, KH_neg);
+	mat3x3_mul(est->state, state_update_matrix, state_covariance_pred);
+
+	est->out.vel_estimate = clampf(est->out.vel_estimate, -est->cfg->max_possible_vel, est->cfg->max_possible_vel);
+
+	if (est->out.vel_estimate < est->vel_est_min) {
+		est->vel_est_min = est->out.vel_estimate;
+	} else {
+		est->vel_est_min = linear_ramp_to(est->vel_est_min, est->cfg->vel_est_stride * dt, est->out.vel_estimate);
+	}
+
+	if (est->out.vel_estimate > est->vel_est_max) {
+		est->vel_est_max = est->out.vel_estimate;
+	} else {
+		est->vel_est_max = linear_ramp_to(est->vel_est_max, est->cfg->vel_est_stride * dt, est->out.vel_estimate);
+	}
 }
