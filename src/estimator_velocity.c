@@ -1,13 +1,9 @@
 #include "estimator_velocity.h"
-
-#include <stdio.h>
-#include <err.h>
 #include "math_utils.h"
 
 void estimator_velocity_init(estimator_velocity_t* est, estimator_velocity_cfg_t* cfg) {
 	est->cfg = cfg;
 
-	dprintf(2, "Setting x[0] to %.4f\n", cfg->init_pos);
 	est->x[0] = cfg->init_pos;
 	est->x[1] = cfg->init_vel;
 	est->x[2] = cfg->init_acc;
