@@ -9,7 +9,7 @@ typedef struct {
 	float vel_min;
 
 	// PI controller parameters
-	float vel_gain;
+	float vel_gain; // proportional gain
 	float vel_integrator_gain;
 	float vel_integrator_limit;
 
