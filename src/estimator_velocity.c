@@ -4,24 +4,6 @@
 #include <err.h>
 #include "math_utils.h"
 
-static unsigned int P_cnt              = 0;
-const unsigned int  printed_iterations = 1;
-
-void print_matrix_3x3(const float mat[3][3]) {
-	for (int i = 0; i < 3; ++i) {
-		dprintf(2, "[ ");
-		for (int j = 0; j < 3; ++j) {
-			dprintf(2, "%8.4f ", mat[i][j]);
-		}
-		dprintf(2, "]\n");
-	}
-	dprintf(2, "\n");
-}
-
-void print_vec3f(const float v[3]) {
-	dprintf(2, "[%.4f, %.4f, %.4f]\n\n", v[0], v[1], v[2]);
-}
-
 void estimator_velocity_init(estimator_velocity_t* est, estimator_velocity_cfg_t* cfg) {
 	est->cfg = cfg;
 
