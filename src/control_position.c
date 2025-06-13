@@ -51,15 +51,14 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	float vel_limit             = minf(shifted_vel_coast, start_accel_limit_out);
 
 	float prop_sign = signf(prop_out);
-	prop_out        = clampf(
+
+	cpos->prop_out_unshifted = clampf(
         prop_out,
         -vel_limit, vel_limit
     );
 
-	prop_out += cpos->cfg->vel_min * prop_sign;
-
 	control_position_check_target_reached(cpos);
-	cpos->vel_output = prop_out;
+	cpos->vel_output = cpos->prop_out_unshifted + cpos->cfg->vel_min * prop_sign;
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {
@@ -75,7 +74,8 @@ void control_position_target_pos(control_position_t* cpos, float pos) {
 	// pos_start is the position at which we would have started if vel_output was 0
 	// when we started and we had accelerated to the current value of vel_output
 	// (in the normal case, when vel_output is 0, pos_start is the current position)
-	cpos->pos_start      = cpos->pos_measured - cpos->vel_output / cpos->cfg->pos_gain;
+	float distance_to_reach_cur_vel = cpos->prop_out_unshifted / cpos->cfg->pos_gain;
+	cpos->pos_start      = cpos->pos_measured - distance_to_reach_cur_vel;
 	cpos->target_reached = false;
 }
 
