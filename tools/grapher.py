@@ -17,6 +17,7 @@ import os
 import stat
 import traceback
 import strictyaml
+import csv
 import tkinter as tk
 from functools import wraps
 
@@ -30,6 +31,9 @@ from dataclasses import dataclass
 class DataLine():
     timestamp: float
     items: dict
+
+    def dict(self):
+        return {'timestamp': self.timestamp } | self.items
 
 class FrameParser:
     def __init__(self, cfg):
@@ -253,6 +257,15 @@ def parse_cfg(filename):
     with open(filename, 'r') as f:
         return strictyaml.load(f.read()).data
 
+def setup_csv_dumping(gen, cfg):
+    with open(cfg['filename'], 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=['timestamp'] + cfg['columns'], extrasaction='ignore')
+        writer.writeheader()
+        for dls in gen:
+            for dl in dls:
+                writer.writerow(dl.dict())
+            yield dls
+
 if __name__ == '__main__':
     if len(sys.argv) == 2:
         cfg = parse_cfg(sys.argv[1])
@@ -262,9 +275,12 @@ if __name__ == '__main__':
         cfg = parse_cfg(sys.argv[1])
         fp = FrameParser(cfg)
         gen = fp.frames_from_file(sys.argv[2])
-        gengen = lambda: gen
     else:
         print(f'usage: {sys.argv[0]} <config file> [input file or serial port]')
         exit(1)
 
+    if cfg['dump_data']:
+        gen = setup_csv_dumping(gen, cfg['dump_data'])
+
+    gengen = lambda: gen
     GraphAnimator(gengen, cfg).animate()
