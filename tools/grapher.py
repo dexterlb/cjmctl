@@ -279,7 +279,7 @@ if __name__ == '__main__':
         print(f'usage: {sys.argv[0]} <config file> [input file or serial port]')
         exit(1)
 
-    if cfg['dump_data']:
+    if cfg.get('dump_data'):
         gen = setup_csv_dumping(gen, cfg['dump_data'])
 
     gengen = lambda: gen
