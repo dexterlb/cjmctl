@@ -7,7 +7,7 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 	cvel->vel_target_preramp = 0;
 	cvel->vel_measured       = 0;
 	cvel->vel_err            = 0;
-	cvel->vel_err_integral   = 0;
+	cvel->integral_torque   = 0;
 	cvel->torque_output      = 0;
 	cvel->is_stopped         = true;
 	cvel->now_us             = 0;
@@ -68,7 +68,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	if (cvel->is_stopped) {
 		cvel->vel_target       = 0;
 		cvel->vel_err          = 0;
-		cvel->vel_err_integral = 0;
+		cvel->integral_torque = 0;
 		cvel->torque_output    = linear_ramp_to(
             cvel->torque_output,
             cvel->cfg->torque_rampdown_speed * dt,
@@ -84,12 +84,20 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	float prop_torque = cvel->cfg->vel_gain * cvel->vel_err;
 
 	// integral component
-	cvel->vel_err_integral += dt * cvel->vel_err;
-	cvel->vel_err_integral = clampf(
-		cvel->vel_err_integral,
-		-cvel->cfg->vel_integrator_limit, cvel->cfg->vel_integrator_limit
+	float int_gain;
+	if (cvel->vel_err >= 0) {
+		int_gain = cvel->cfg->vel_integrator_gain_accel;
+	} else {
+		int_gain = cvel->cfg->vel_integrator_gain_decel;
+	}
+
+	cvel->integral_torque += dt * cvel->vel_err * int_gain;
+	cvel->integral_torque = clampf(
+		cvel->integral_torque,
+		-cvel->cfg->vel_integral_torque_limit, cvel->cfg->vel_integral_torque_limit
 	);
-	float int_torque = cvel->cfg->vel_integrator_gain * cvel->vel_err_integral;
+
+	float int_torque = cvel->integral_torque;
 
 	// compute preliminary result
 	float out = prop_torque + int_torque;

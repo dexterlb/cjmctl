@@ -10,8 +10,9 @@ typedef struct {
 
 	// PI controller parameters
 	float vel_gain; // proportional gain
-	float vel_integrator_gain;
-	float vel_integrator_limit;
+	float vel_integrator_gain_accel;
+	float vel_integrator_gain_decel;
+	float vel_integral_torque_limit;
 
 	// Configuration for "rest mode" (going limp when velocity has been 0 for some time)
 	float rest_timeout; // use +inf if you want to always actively hold position
@@ -25,10 +26,10 @@ typedef struct {
 	control_velocity_cfg_t* cfg;
 
 	// state
-	float    vel_err_integral;
 	float    vel_err;
 	float    rest_timer;
 	float    rest_integral;
+	float    integral_torque;
 	uint32_t now_us;
 
 	// params
