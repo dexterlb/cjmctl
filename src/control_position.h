@@ -6,6 +6,7 @@ typedef struct {
 	float vel_min;
 
 	float pos_gain;
+	float acceleration;
 
 	float    target_reached_window;  // use 0 to never assume target is reached
 	uint32_t target_reached_time_us; // timestamp must be small enough so that we don't leave the window
@@ -20,8 +21,7 @@ typedef struct {
 	float    pos_err;
 	uint32_t now_us;
 	uint32_t target_reached_timestamp;
-	float    pos_start;
-	float    prop_out_unshifted;
+	float    vel_output_unshifted;
 
 	// params
 	float pos_target;

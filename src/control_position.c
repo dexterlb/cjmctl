@@ -8,9 +8,9 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
 	cpos->cfg                      = cfg;
 	cpos->pos_measured             = 0;
 	cpos->pos_target               = 0;
-	cpos->pos_start                = 0;
 	cpos->pos_err                  = 0;
 	cpos->now_us                   = 0;
+	cpos->vel_output_unshifted     = 0;
 	cpos->target_reached           = true;
 	cpos->target_reached_timestamp = 0;
 	cpos->vel_coast                = cfg->vel_coast;
@@ -43,22 +43,25 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		0
 	);
 
-	// The following is a hack that makes the proportional controller act as a
-	// trapezoidal trajectory planner.
-	// In the future we should throw it out and make a proper constant-jerk
-	// trajectory planner.
-	float start_accel_limit_out = fabs(cpos->cfg->pos_gain * (cpos->pos_measured - cpos->pos_start));
-	float vel_limit             = minf(shifted_vel_coast, start_accel_limit_out);
-
 	float prop_sign = signf(prop_out);
 
-	cpos->prop_out_unshifted = clampf(
+	prop_out = clampf(
         prop_out,
-        -vel_limit, vel_limit
+        -shifted_vel_coast, shifted_vel_coast
     );
 
+	if (fabs(prop_out) > fabs(cpos->vel_output_unshifted)) {
+		cpos->vel_output_unshifted = linear_ramp_to(
+			cpos->vel_output_unshifted,
+			cpos->cfg->acceleration * dt,
+			prop_out
+		);
+	} else {
+		cpos->vel_output_unshifted = prop_out;
+	}
+
 	control_position_check_target_reached(cpos);
-	cpos->vel_output = cpos->prop_out_unshifted + cpos->cfg->vel_min * prop_sign;
+	cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * prop_sign;
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {
@@ -71,11 +74,6 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel) {
 
 void control_position_target_pos(control_position_t* cpos, float pos) {
 	cpos->pos_target = pos;
-	// pos_start is the position at which we would have started if vel_output was 0
-	// when we started and we had accelerated to the current value of vel_output
-	// (in the normal case, when vel_output is 0, pos_start is the current position)
-	float distance_to_reach_cur_vel = cpos->prop_out_unshifted / cpos->cfg->pos_gain;
-	cpos->pos_start      = cpos->pos_measured - distance_to_reach_cur_vel;
 	cpos->target_reached = false;
 }
 
