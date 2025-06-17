@@ -16,6 +16,10 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 	cvel->ramp_speed         = INFINITY;
 }
 
+float cur_direction_sign(control_velocity_t* cvel) {
+	return signf(cvel->vel_measured);    // fixme: this is unstable
+}
+
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	float dt     = calc_dt_from_timestamps_us(cvel->now_us, now_us);
 	cvel->now_us = now_us;
@@ -85,7 +89,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 
 	// integral component
 	float int_gain;
-	if (cvel->vel_err >= 0) {
+	if ((cvel->vel_err * cvel->integral_torque) >= 0) {
 		int_gain = cvel->cfg->vel_integrator_gain_accel;
 	} else {
 		int_gain = cvel->cfg->vel_integrator_gain_decel;
@@ -106,7 +110,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	float torque_max = cvel->cfg->torque_max;
 
 	// don't try (too hard) to spin in the opposite direction to slow down
-	if (out * cvel->vel_measured < 0) {
+	if (out * cur_direction_sign(cvel) < 0) {
 		torque_max = cvel->cfg->torque_opposite_max;
 	}
 
