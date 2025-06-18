@@ -35,7 +35,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	cpos->pos_err = cpos->pos_target - cpos->pos_measured;
 
-	float prop_out = cpos->cfg->pos_gain * cpos->pos_err;
+	cpos->prop_out = cpos->cfg->pos_gain * cpos->pos_err;
 
 	float shifted_vel_coast = maxf(
 		// it is important that we don't go over the max vel_coast, even if the user said so
@@ -43,21 +43,21 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		0
 	);
 
-	float prop_sign = signf(prop_out);
+	float prop_sign = signf(cpos->prop_out);
 
-	prop_out = clampf(
-        prop_out,
+	cpos->prop_out = clampf(
+        cpos->prop_out,
         -shifted_vel_coast, shifted_vel_coast
     );
 
-	if (fabs(prop_out) > fabs(cpos->vel_output_unshifted)) {
+	if (fabs(cpos->prop_out) > fabs(cpos->vel_output_unshifted) || cpos->prop_out * cpos->vel_output_unshifted < 0) {
 		cpos->vel_output_unshifted = linear_ramp_to(
 			cpos->vel_output_unshifted,
 			cpos->cfg->acceleration * dt,
-			prop_out
+			cpos->prop_out
 		);
 	} else {
-		cpos->vel_output_unshifted = prop_out;
+		cpos->vel_output_unshifted = cpos->prop_out;
 	}
 
 	control_position_check_target_reached(cpos);

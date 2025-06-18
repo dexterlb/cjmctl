@@ -10,14 +10,11 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 	cvel->integral_torque   = 0;
 	cvel->torque_output      = 0;
 	cvel->is_stopped         = true;
+	cvel->stable_start_achieved         = false;
 	cvel->now_us             = 0;
 	cvel->rest_timer         = 0;
 	cvel->rest_integral      = 0;
 	cvel->ramp_speed         = INFINITY;
-}
-
-float cur_direction_sign(control_velocity_t* cvel) {
-	return signf(cvel->vel_measured);    // fixme: this is unstable
 }
 
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
@@ -63,6 +60,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 		if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout) {
 			cvel->torque_output = cvel->rest_integral / (cvel->rest_timer * 0.3);
 			cvel->is_stopped    = true;
+			cvel->stable_start_achieved = false;
 		} else if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout * 0.7) {
 			cvel->rest_integral += cvel->torque_output * dt;
 		}
@@ -109,8 +107,12 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	// determine max torque
 	float torque_max = cvel->cfg->torque_max;
 
+	if (!cvel->is_stopped && fabs(cvel->vel_measured) > cvel->cfg->stable_start_vel_thresh) {
+		cvel->stable_start_achieved = true;
+	}
+
 	// don't try (too hard) to spin in the opposite direction to slow down
-	if (out * cur_direction_sign(cvel) < 0) {
+	if (cvel->stable_start_achieved && out * cvel->vel_measured < 0) {
 		torque_max = cvel->cfg->torque_opposite_max;
 	}
 

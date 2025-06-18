@@ -22,6 +22,7 @@ typedef struct {
 	uint32_t now_us;
 	uint32_t target_reached_timestamp;
 	float    vel_output_unshifted;
+	float    prop_out;
 
 	// params
 	float pos_target;
