@@ -74,8 +74,6 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		0
 	);
 
-	float prop_sign = signf(cpos->prop_out);
-
 	cpos->prop_out = clampf(
         cpos->prop_out,
         -shifted_vel_coast, shifted_vel_coast
@@ -92,7 +90,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	}
 
 	control_position_check_target_reached(cpos);
-	cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * prop_sign;
+	cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {
