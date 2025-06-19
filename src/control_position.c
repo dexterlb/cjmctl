@@ -15,8 +15,8 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
 	cpos->target_reached_timestamp = 0;
 	cpos->vel_coast                = cfg->vel_coast;
 	cpos->vel_output               = 0;
-	cpos->paused = false;
-	cpos->unpause_requested = false;
+	cpos->paused                   = false;
+	cpos->unpause_requested        = false;
 }
 
 void control_position_pause_if(control_position_t* cpos, bool pause) {
@@ -43,7 +43,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	if (cpos->unpause_requested) {
 		cpos->unpause_requested = false;
-		cpos->paused = false;
+		cpos->paused            = false;
 		return;
 	}
 
@@ -75,9 +75,9 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	);
 
 	cpos->prop_out = clampf(
-        cpos->prop_out,
-        -shifted_vel_coast, shifted_vel_coast
-    );
+		cpos->prop_out,
+		-shifted_vel_coast, shifted_vel_coast
+	);
 
 	if (fabs(cpos->prop_out) > fabs(cpos->vel_output_unshifted) || cpos->prop_out * cpos->vel_output_unshifted < 0) {
 		cpos->vel_output_unshifted = linear_ramp_to(
@@ -102,7 +102,7 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel) {
 }
 
 void control_position_target_pos(control_position_t* cpos, float pos) {
-	cpos->pos_target = pos;
+	cpos->pos_target     = pos;
 	cpos->target_reached = false;
 }
 

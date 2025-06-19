@@ -2,21 +2,21 @@
 #include "math_utils.h"
 
 void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg) {
-	cvel->cfg                = cfg;
-	cvel->vel_target         = 0;
-	cvel->vel_target_preramp = 0;
-	cvel->vel_measured       = 0;
-	cvel->vel_err            = 0;
-	cvel->integral_torque   = 0;
-	cvel->torque_output      = 0;
-	cvel->is_stopped         = true;
-	cvel->stable_start_achieved         = false;
-	cvel->now_us             = 0;
-	cvel->rest_timer         = 0;
-	cvel->rest_integral      = 0;
-	cvel->ramp_speed         = INFINITY;
-	cvel->paused = false;
-	cvel->unpause_requested = false;
+	cvel->cfg                   = cfg;
+	cvel->vel_target            = 0;
+	cvel->vel_target_preramp    = 0;
+	cvel->vel_measured          = 0;
+	cvel->vel_err               = 0;
+	cvel->integral_torque       = 0;
+	cvel->torque_output         = 0;
+	cvel->is_stopped            = true;
+	cvel->stable_start_achieved = false;
+	cvel->now_us                = 0;
+	cvel->rest_timer            = 0;
+	cvel->rest_integral         = 0;
+	cvel->ramp_speed            = INFINITY;
+	cvel->paused                = false;
+	cvel->unpause_requested     = false;
 }
 
 void control_velocity_pause_if(control_velocity_t* cpos, bool pause) {
@@ -50,14 +50,13 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 
 	if (cvel->unpause_requested) {
 		cvel->unpause_requested = false;
-		cvel->paused = false;
+		cvel->paused            = false;
 		return;
 	}
 
 	if (cvel->paused) {
 		return;
 	}
-
 
 	// determine velocity target
 	float vel_min = maxf(cvel->cfg->vel_min, 0.00001);
@@ -89,8 +88,8 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 		// be averaged before we begin ramping it down
 		float time_elapsed_in_rest = calc_dt_from_timestamps_us(cvel->rest_timer, now_us);
 		if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout) {
-			cvel->torque_output = cvel->rest_integral / (cvel->rest_timer * 0.3);
-			cvel->is_stopped    = true;
+			cvel->torque_output         = cvel->rest_integral / (cvel->rest_timer * 0.3);
+			cvel->is_stopped            = true;
 			cvel->stable_start_achieved = false;
 		} else if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout * 0.7) {
 			cvel->rest_integral += cvel->torque_output * dt;
@@ -99,10 +98,10 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 
 	// go limp if we're stopped
 	if (cvel->is_stopped) {
-		cvel->vel_target       = 0;
-		cvel->vel_err          = 0;
+		cvel->vel_target      = 0;
+		cvel->vel_err         = 0;
 		cvel->integral_torque = 0;
-		cvel->torque_output    = linear_ramp_to(
+		cvel->torque_output   = linear_ramp_to(
             cvel->torque_output,
             cvel->cfg->torque_rampdown_speed * dt,
             0

@@ -5,8 +5,8 @@
 typedef struct {
 	// General configuration
 	float torque_max;
-	float torque_opposite_max; // use 0 if you don't want to apply opposite torque to brake
-	float stable_start_vel_thresh;  // velocity threshold above which to consider that we've started spinning
+	float torque_opposite_max;     // use 0 if you don't want to apply opposite torque to brake
+	float stable_start_vel_thresh; // velocity threshold above which to consider that we've started spinning
 	float vel_min;
 
 	// PI controller parameters
@@ -32,7 +32,7 @@ typedef struct {
 	float    rest_integral;
 	float    integral_torque;
 	uint32_t now_us;
-	bool stable_start_achieved;
+	bool     stable_start_achieved;
 
 	bool paused;
 	bool unpause_requested;
