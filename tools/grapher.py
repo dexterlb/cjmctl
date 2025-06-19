@@ -3,6 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 # "matplotlib",
+# "numpy",
 # "pyserial",
 # "strictyaml",
 # "PyQt6"
@@ -24,6 +25,8 @@ from functools import wraps
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
+import numpy as np
+
 import serial
 from dataclasses import dataclass
 
@@ -41,6 +44,7 @@ class FrameParser:
         self.dataline_regex = re.compile(self.cfg['dataline_regex'])
         self.keyval_regex = re.compile(self.cfg['keyval_regex'])
         self.timestamp_regex = re.compile(self.cfg['timestamp_regex'])
+        self._line_remnant = ''
 
     def parse_meas_line(self, line: str) -> DataLine:
         if not self.dataline_regex.search(line):
@@ -107,7 +111,7 @@ class FrameParser:
             max_line_len = 2
             while True:
                 pos = f.seek(-max_line_len, os.SEEK_END)
-                lines = f.read().decode('utf-8').splitlines()
+                lines = self._get_lines(f.read())
                 if len(lines) < 2:
                     if pos == 0:
                         raise RuntimeError('no newlines in input file?')
@@ -136,10 +140,20 @@ class FrameParser:
                     yield []
                     continue
 
-                lines = data.decode('utf-8').splitlines()
+                lines = self._get_lines(data)
                 datalines = (self.parse_meas_line(line) for line in lines)
                 ok_datalines = [dl for dl in datalines if dl]
                 yield ok_datalines
+
+    def _get_lines(self, data):
+        s = self._line_remnant + data.decode('utf-8', errors='ignore')
+        lines = s.splitlines()
+        if s.endswith('\r') or s.endswith('\n'):
+            self._line_remnant = ''
+            return lines
+        else:
+            self._line_remnant = lines[-1]
+            return lines[:-1]
 
     def frames_from_file(self, filename):
         mode = os.lstat(filename).st_mode
@@ -171,9 +185,6 @@ class GraphAnimator():
         self.timestamp_sequences = dict()
 
         self.gen = gen
-        self.colour_map = list(plt.colormaps['viridis'].colors)
-        random.shuffle(self.colour_map)
-        self.colour_idx = 0
         self.prev_ts = 0
         self.timetravel_keys = set()
 
@@ -203,14 +214,20 @@ class GraphAnimator():
                     self.timestamp_sequences[k] = [dataline.timestamp]
                     reset_keys.add(k)
 
-        for k in reset_keys:
-            ax = self.get_subplot(k)
-            self.plots[k], = ax.plot(
-                self.timestamp_sequences[k],
-                self.val_sequences[k],
-                color=self.next_colour(),
-                label=k
-            )
+        if len(reset_keys) > 0:
+            for k in reset_keys:
+                ax = self.get_subplot(k)
+                self.plots[k], = ax.plot(
+                    self.timestamp_sequences[k],
+                    self.val_sequences[k],
+                    label=k
+                )
+
+            for ax in self.subplots:
+                colormap = plt.cm.nipy_spectral
+                colours = colormap(np.linspace(0, 1, len(ax.lines)))
+                ax.set_prop_cycle('color', colours)
+
         for k in updated_keys - reset_keys:
             self.plots[k].set_data(self.timestamp_sequences[k], self.val_sequences[k])
             self.plots[k].set_label(k + ': ' + str(self.val_sequences[k][-1]))
@@ -227,11 +244,6 @@ class GraphAnimator():
             if r.search(k):
                 return self.subplots[i]
         raise RuntimeError(f'no subplot that matches value {k}')
-
-    def next_colour(self):
-            colour = self.colour_map[self.colour_idx]
-            self.colour_idx += 1
-            return colour
 
     def animate(self):
         anim = animation.FuncAnimation(
