@@ -34,6 +34,9 @@ typedef struct {
 	uint32_t now_us;
 	bool stable_start_achieved;
 
+	bool paused;
+	bool unpause_requested;
+
 	// params
 	float vel_target;
 	float vel_target_preramp;
@@ -59,3 +62,7 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us);
 void control_velocity_report_vel(control_velocity_t* cvel, float vel);
 void control_velocity_target_vel(control_velocity_t* cvel, float vel, float ramp_speed);
+
+void control_velocity_pause_if(control_velocity_t* cvel, bool pause);
+void control_velocity_pause(control_velocity_t* cvel);
+void control_velocity_unpause(control_velocity_t* cvel);

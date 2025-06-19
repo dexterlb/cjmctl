@@ -15,6 +15,26 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 	cvel->rest_timer         = 0;
 	cvel->rest_integral      = 0;
 	cvel->ramp_speed         = INFINITY;
+	cvel->paused = false;
+	cvel->unpause_requested = false;
+}
+
+void control_velocity_pause_if(control_velocity_t* cpos, bool pause) {
+	if (pause) {
+		control_velocity_pause(cpos);
+	} else {
+		control_velocity_unpause(cpos);
+	}
+}
+
+void control_velocity_pause(control_velocity_t* cvel) {
+	cvel->paused = true;
+}
+
+void control_velocity_unpause(control_velocity_t* cvel) {
+	if (cvel->paused) {
+		cvel->unpause_requested = true;
+	}
 }
 
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
@@ -27,6 +47,17 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	if (!isnormal(dt)) {
 		return;
 	}
+
+	if (cvel->unpause_requested) {
+		cvel->unpause_requested = false;
+		cvel->paused = false;
+		return;
+	}
+
+	if (cvel->paused) {
+		return;
+	}
+
 
 	// determine velocity target
 	float vel_min = maxf(cvel->cfg->vel_min, 0.00001);

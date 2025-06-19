@@ -15,11 +15,42 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
 	cpos->target_reached_timestamp = 0;
 	cpos->vel_coast                = cfg->vel_coast;
 	cpos->vel_output               = 0;
+	cpos->paused = false;
+	cpos->unpause_requested = false;
+}
+
+void control_position_pause_if(control_position_t* cpos, bool pause) {
+	if (pause) {
+		control_position_pause(cpos);
+	} else {
+		control_position_unpause(cpos);
+	}
+}
+
+void control_position_pause(control_position_t* cpos) {
+	cpos->paused = true;
+}
+
+void control_position_unpause(control_position_t* cpos) {
+	if (cpos->paused) {
+		cpos->unpause_requested = true;
+	}
 }
 
 void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	float dt     = calc_dt_from_timestamps_us(cpos->now_us, now_us);
 	cpos->now_us = now_us;
+
+	if (cpos->unpause_requested) {
+		cpos->unpause_requested = false;
+		cpos->paused = false;
+		return;
+	}
+
+	if (cpos->paused) {
+		return;
+	}
+
 	if (dt <= 0) {
 		return;
 	}

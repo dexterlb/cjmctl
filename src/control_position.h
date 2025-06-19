@@ -24,6 +24,9 @@ typedef struct {
 	float    vel_output_unshifted;
 	float    prop_out;
 
+	bool paused;
+	bool unpause_requested;
+
 	// params
 	float pos_target;
 
@@ -40,3 +43,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us);
 void control_position_report_pos(control_position_t* cpos, float pos);
 void control_position_target_pos(control_position_t* cpos, float pos);
 void control_position_set_coast_vel(control_position_t* cpos, float vel);
+
+void control_position_pause_if(control_position_t* cvel, bool pause);
+void control_position_pause(control_position_t* cvel);
+void control_position_unpause(control_position_t* cvel);
