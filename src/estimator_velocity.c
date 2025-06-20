@@ -8,9 +8,6 @@ void estimator_velocity_init(estimator_velocity_t* est, estimator_velocity_cfg_t
 	est->x[1] = cfg->init_vel;
 	est->x[2] = cfg->init_acc;
 
-	est->vel_est_max = cfg->init_vel;
-	est->vel_est_min = cfg->init_vel;
-
 	mat3x3_eye(est->state);
 
 	est->state[0][0] = cfg->measurement_noise_pos;
@@ -89,16 +86,4 @@ void estimator_velocity_update_dt(estimator_velocity_t* est, float measured_pos,
 	mat3x3_mul(est->state, state_update_matrix, state_covariance_pred);
 
 	est->out.vel_estimate = clampf(est->out.vel_estimate, -est->cfg->max_possible_vel, est->cfg->max_possible_vel);
-
-	if (est->out.vel_estimate < est->vel_est_min) {
-		est->vel_est_min = est->out.vel_estimate;
-	} else {
-		est->vel_est_min = linear_ramp_to(est->vel_est_min, est->cfg->vel_est_stride * dt, est->out.vel_estimate);
-	}
-
-	if (est->out.vel_estimate > est->vel_est_max) {
-		est->vel_est_max = est->out.vel_estimate;
-	} else {
-		est->vel_est_max = linear_ramp_to(est->vel_est_max, est->cfg->vel_est_stride * dt, est->out.vel_estimate);
-	}
 }

@@ -14,7 +14,6 @@ typedef struct {
 	float process_noise_vel;
 	float process_noise_acc;
 	float measurement_noise_pos;
-	float vel_est_stride;
 	float max_possible_vel;
 } estimator_velocity_cfg_t;
 
@@ -31,8 +30,6 @@ typedef struct {
 	};
 	float state[3][3];
 
-	float    vel_est_min;
-	float    vel_est_max;
 	uint32_t now_us;
 } estimator_velocity_t;
 
