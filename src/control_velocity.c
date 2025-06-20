@@ -153,6 +153,9 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 }
 
 void control_velocity_report_vel(control_velocity_t* cvel, float vel) {
+	if (cvel->vel_measured * vel < 0) {
+		cvel->stable_start_achieved = false;
+	}
 	cvel->vel_measured = vel;
 }
 
