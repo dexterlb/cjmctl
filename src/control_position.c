@@ -126,3 +126,9 @@ void control_position_check_target_reached(control_position_t* cpos) {
 
 	cpos->target_reached = true;
 }
+
+// return position on which we can stop without "brakes"
+float control_position_stop_pos(control_position_t* cpos) {
+	return cpos->pos_measured + cpos->vel_output_unshifted / cpos->cfg->pos_gain;
+	
+}

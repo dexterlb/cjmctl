@@ -44,6 +44,8 @@ void control_position_report_pos(control_position_t* cpos, float pos);
 void control_position_target_pos(control_position_t* cpos, float pos);
 void control_position_set_coast_vel(control_position_t* cpos, float vel);
 
-void control_position_pause_if(control_position_t* cvel, bool pause);
-void control_position_pause(control_position_t* cvel);
-void control_position_unpause(control_position_t* cvel);
+void control_position_pause_if(control_position_t* cpos, bool pause);
+void control_position_pause(control_position_t* cpos);
+void control_position_unpause(control_position_t* cpos);
+
+float control_position_stop_pos(control_position_t* cpos);
