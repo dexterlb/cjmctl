@@ -13,6 +13,8 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
 	cpos->vel_output_unshifted     = 0;
 	cpos->target_reached           = true;
 	cpos->target_reached_timestamp = 0;
+	cpos->changed_direction_wait_timestamp = 0;
+	cpos->direction_changed = false;
 	cpos->vel_coast                = cfg->vel_coast;
 	cpos->vel_output               = 0;
 	cpos->paused                   = false;
@@ -64,6 +66,16 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		return;
 	}
 
+	if(cpos->direction_changed && cpos->vel_output == 0) { //should not be using 0.0 as a refenrence value
+		cpos->changed_direction_wait_timestamp = cpos->now_us;
+		cpos->direction_changed = false;
+	}
+
+	if(cpos->now_us - cpos->changed_direction_wait_timestamp <= cpos->cfg->changed_direction_wait_us ) {
+		cpos->changed_direction_wait_timestamp = 0;
+		return;
+	}
+
 	cpos->pos_err = cpos->pos_target - cpos->pos_measured;
 
 	cpos->prop_out = cpos->cfg->pos_gain * cpos->pos_err;
@@ -102,6 +114,9 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel) {
 }
 
 void control_position_target_pos(control_position_t* cpos, float pos) {
+	if(!cpos->target_reached && signf(cpos->pos_target - cpos->pos_measured) != signf(pos - cpos->pos_measured)) {
+		cpos->direction_changed = true;
+	}
 	cpos->pos_target     = pos;
 	cpos->target_reached = false;
 }
