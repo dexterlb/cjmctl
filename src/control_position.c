@@ -97,7 +97,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		new_vel_output_unshifted = cpos->prop_out;
 	}
 
-	if (!cpos->direction_changed && new_vel_output_unshifted * cpos->vel_output_unshifted < 0) {
+	if (new_vel_output_unshifted * cpos->vel_output_unshifted < 0) {
 		cpos->changed_direction_wait_timestamp = cpos->now_us;
 		cpos->direction_changed = true;
 	}
