@@ -13,6 +13,8 @@ void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg
 	cpos->vel_output_unshifted     = 0;
 	cpos->target_reached           = true;
 	cpos->target_reached_timestamp = 0;
+	cpos->changed_direction_wait_timestamp = 0;
+	cpos->direction_changed = false;
 	cpos->vel_coast                = cfg->vel_coast;
 	cpos->vel_output               = 0;
 	cpos->paused                   = false;
@@ -61,8 +63,14 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	if (cpos->target_reached) {
 		cpos->vel_output = 0;
+		cpos->vel_output_unshifted = 0;
 		return;
 	}
+
+	if (cpos->direction_changed && cpos->now_us - cpos->changed_direction_wait_timestamp <= cpos->cfg->changed_direction_wait_us) {
+		return;
+	}
+	cpos->direction_changed = false;
 
 	cpos->pos_err = cpos->pos_target - cpos->pos_measured;
 
@@ -79,18 +87,28 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		-shifted_vel_coast, shifted_vel_coast
 	);
 
+	float new_vel_output_unshifted = 0;
 	if (fabs(cpos->prop_out) > fabs(cpos->vel_output_unshifted) || cpos->prop_out * cpos->vel_output_unshifted < 0) {
-		cpos->vel_output_unshifted = linear_ramp_to(
+		new_vel_output_unshifted = linear_ramp_to(
 			cpos->vel_output_unshifted,
 			cpos->cfg->acceleration * dt,
 			cpos->prop_out
 		);
 	} else {
-		cpos->vel_output_unshifted = cpos->prop_out;
+		new_vel_output_unshifted = cpos->prop_out;
 	}
 
-	control_position_check_target_reached(cpos);
-	cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
+	if (new_vel_output_unshifted * cpos->vel_output_unshifted < 0) {
+		cpos->changed_direction_wait_timestamp = cpos->now_us;
+		cpos->direction_changed = true;
+		cpos->vel_output_unshifted = 0;
+		cpos->vel_output = 0;
+	} else {
+		cpos->vel_output_unshifted = new_vel_output_unshifted;
+		control_position_check_target_reached(cpos);
+		cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
+	}
+
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {

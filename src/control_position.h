@@ -9,6 +9,7 @@ typedef struct {
 	float acceleration;
 
 	float    target_reached_window;  // use 0 to never assume target is reached
+	uint32_t changed_direction_wait_us;
 	uint32_t target_reached_time_us; // timestamp must be small enough so that we don't leave the window
 	                                 // while moving at vel_min for the given time
 } control_position_cfg_t;
@@ -21,11 +22,13 @@ typedef struct {
 	float    pos_err;
 	uint32_t now_us;
 	uint32_t target_reached_timestamp;
+	uint32_t changed_direction_wait_timestamp; // timestamp of wait start. See: control_position_cfg_t.changed_direction_wait
 	float    vel_output_unshifted;
 	float    prop_out;
 
 	bool paused;
 	bool unpause_requested;
+	bool direction_changed;
 
 	// params
 	float pos_target;
