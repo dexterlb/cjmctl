@@ -63,6 +63,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	if (cpos->target_reached) {
 		cpos->vel_output = 0;
+		cpos->vel_output_unshifted = 0;
 		return;
 	}
 
@@ -100,10 +101,11 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	if (new_vel_output_unshifted * cpos->vel_output_unshifted < 0) {
 		cpos->changed_direction_wait_timestamp = cpos->now_us;
 		cpos->direction_changed = true;
+		cpos->vel_output_unshifted = 0;
+	} else {
+		cpos->vel_output_unshifted = new_vel_output_unshifted;
 	}
 
-	cpos->vel_output_unshifted = new_vel_output_unshifted;
-	
 	control_position_check_target_reached(cpos);
 	cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
 }
