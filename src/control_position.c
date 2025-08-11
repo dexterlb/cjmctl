@@ -4,7 +4,7 @@
 
 void control_position_check_target_reached(control_position_t* cpos);
 
-void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg) {
+void control_position_init(control_position_t* cpos, const control_position_cfg_t* cfg) {
 	cpos->cfg                      = cfg;
 	cpos->pos_measured             = 0;
 	cpos->pos_target               = 0;
@@ -146,7 +146,6 @@ void control_position_check_target_reached(control_position_t* cpos) {
 }
 
 // return position on which we can stop without "brakes"
-float control_position_stop_pos(control_position_t* cpos) {
+float control_position_stop_pos(const control_position_t* cpos) {
 	return cpos->pos_measured + cpos->vel_output_unshifted / cpos->cfg->pos_gain;
-	
 }

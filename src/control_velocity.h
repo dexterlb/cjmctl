@@ -1,4 +1,9 @@
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -66,3 +71,7 @@ void control_velocity_target_vel(control_velocity_t* cvel, float vel, float ramp
 void control_velocity_pause_if(control_velocity_t* cvel, bool pause);
 void control_velocity_pause(control_velocity_t* cvel);
 void control_velocity_unpause(control_velocity_t* cvel);
+
+#ifdef __cplusplus
+}
+#endif
