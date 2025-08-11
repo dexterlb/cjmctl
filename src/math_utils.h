@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <math.h>
 #include <stdint.h>
 
@@ -33,3 +37,7 @@ float linear_ramp_to(float x, float step, float target);
 
 // Time utils
 float calc_dt_from_timestamps_us(uint32_t then, uint32_t now);
+
+#ifdef __cplusplus
+}
+#endif

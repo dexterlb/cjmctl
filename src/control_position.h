@@ -1,4 +1,9 @@
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 typedef struct {
@@ -15,7 +20,7 @@ typedef struct {
 } control_position_cfg_t;
 
 typedef struct {
-	control_position_cfg_t* cfg;
+	const control_position_cfg_t* cfg;
 
 	// state
 	float    vel_coast;
@@ -41,7 +46,7 @@ typedef struct {
 	bool  target_reached;
 } control_position_t;
 
-void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg);
+void control_position_init(control_position_t* cpos, const control_position_cfg_t* cfg);
 void control_position_update(control_position_t* cpos, uint32_t now_us);
 void control_position_report_pos(control_position_t* cpos, float pos);
 void control_position_target_pos(control_position_t* cpos, float pos);
@@ -51,4 +56,9 @@ void control_position_pause_if(control_position_t* cpos, bool pause);
 void control_position_pause(control_position_t* cpos);
 void control_position_unpause(control_position_t* cpos);
 
-float control_position_stop_pos(control_position_t* cpos);
+float control_position_stop_pos(const control_position_t* cpos);
+
+#ifdef __cplusplus
+}
+#include "control_position.hpp"
+#endif
