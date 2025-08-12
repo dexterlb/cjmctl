@@ -34,6 +34,10 @@ class PositionController {
             control_position_unpause(&this->controller);
         };
 
+        void stop() {
+            control_position_stop(&this->controller);
+        };
+
         float stopPos() const {
             return control_position_stop_pos(&this->controller);
         };
@@ -49,6 +53,7 @@ class PositionController {
         bool& targetReached() {
             return this->controller.target_reached;
         };
-	private:
+
+	public:
 		control_position_t     controller;
 };
