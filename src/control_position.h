@@ -13,7 +13,7 @@ typedef struct {
 	float pos_gain;
 	float acceleration;
 
-	float    target_reached_window;  // use 0 to never assume target is reached
+	float    target_reached_window; // use 0 to never assume target is reached
 	uint32_t changed_direction_wait_us;
 	uint32_t target_reached_time_us; // timestamp must be small enough so that we don't leave the window
 	                                 // while moving at vel_min for the given time
@@ -33,6 +33,7 @@ typedef struct {
 
 	bool paused;
 	bool unpause_requested;
+	bool stop_requested;
 	bool direction_changed;
 
 	// params
@@ -55,6 +56,7 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel);
 void control_position_pause_if(control_position_t* cpos, bool pause);
 void control_position_pause(control_position_t* cpos);
 void control_position_unpause(control_position_t* cpos);
+void control_position_stop(control_position_t* cpos);
 
 float control_position_stop_pos(const control_position_t* cpos);
 
