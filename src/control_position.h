@@ -33,7 +33,8 @@ typedef struct {
 
 	bool paused;
 	bool unpause_requested;
-	bool stop_requested;
+	bool ptru_requested;
+	float ptru_vel;
 	bool direction_changed;
 
 	// params
@@ -57,6 +58,7 @@ void control_position_pause_if(control_position_t* cpos, bool pause);
 void control_position_pause(control_position_t* cpos);
 void control_position_unpause(control_position_t* cpos);
 void control_position_stop(control_position_t* cpos);
+void control_position_vel_ptru_mode(control_position_t* cpos, float vel);
 
 float control_position_stop_pos(const control_position_t* cpos);
 

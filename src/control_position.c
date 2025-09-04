@@ -19,7 +19,7 @@ void control_position_init(control_position_t* cpos, const control_position_cfg_
 	cpos->vel_output                       = 0;
 	cpos->paused                           = false;
 	cpos->unpause_requested                = false;
-	cpos->stop_requested                   = false;
+	cpos->ptru_requested                   = false;
 }
 
 void control_position_pause_if(control_position_t* cpos, bool pause) {
@@ -41,7 +41,12 @@ void control_position_unpause(control_position_t* cpos) {
 }
 
 void control_position_stop(control_position_t* cpos) {
-	cpos->stop_requested = true;
+	control_position_vel_ptru_mode(cpos, 0);
+}
+
+void control_position_vel_ptru_mode(control_position_t* cpos, float vel) {
+	cpos->ptru_vel = vel;
+	cpos->ptru_requested = true;
 }
 
 void control_position_update(control_position_t* cpos, uint32_t now_us) {
@@ -93,11 +98,11 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	);
 
 	float new_vel_output_unshifted = 0;
-	if (cpos->stop_requested) {
+	if (cpos->ptru_requested) {
 		new_vel_output_unshifted = linear_ramp_to(
 			cpos->vel_output_unshifted,
 			cpos->cfg->acceleration * dt,
-			0
+			cpos->ptru_vel
 		);
 	} else if (fabs(cpos->prop_out) > fabs(cpos->vel_output_unshifted) || cpos->prop_out * cpos->vel_output_unshifted < 0) {
 		new_vel_output_unshifted = linear_ramp_to(
@@ -132,11 +137,11 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel) {
 void control_position_target_pos(control_position_t* cpos, float pos) {
 	cpos->pos_target     = pos;
 	cpos->target_reached = false;
-	cpos->stop_requested = false;
+	cpos->ptru_requested = false;
 }
 
 void control_position_check_target_reached(control_position_t* cpos) {
-	if (cpos->stop_requested && cpos->vel_output_unshifted == 0) {
+	if (cpos->ptru_requested && cpos->vel_output_unshifted == 0) {
 		cpos->target_reached = true;
 		return;
 	}
