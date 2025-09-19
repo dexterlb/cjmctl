@@ -38,6 +38,10 @@ class PositionController {
             control_position_stop(&this->controller);
         };
 
+        void velPtruMode(float vel) {
+            control_position_vel_ptru_mode(&this->controller, vel);
+        };
+
         float stopPos() const {
             return control_position_stop_pos(&this->controller);
         };
