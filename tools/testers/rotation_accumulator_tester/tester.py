@@ -51,6 +51,12 @@ def is_in(x, interval):
 def test_main():
     do_test(
         't1',
+        points=[(i, [-0.1, 0.1][i % 2]) for i in range(50)],
+        expected_saves=0,
+        plot=False
+    )
+    do_test(
+        't2',
         points=[
             (0, 0),
             (5, 1.5),
