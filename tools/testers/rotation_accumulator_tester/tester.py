@@ -26,17 +26,30 @@ class MercedesRotAccumulator:
         self.cum_pos = jumpovers + self._raw_pos
 
     def _update_cum_sector(self):
-        zone_left, zone_right = {
+        zone_left, zone_right = self._calc_sector_transition_zones()
+
+        if is_in(self._raw_pos, zone_right):
+            self.cum_sector += 1
+        elif is_in(self._raw_pos, zone_left):
+            self.cum_sector -= 1
+
+    def _calc_sector_transition_zones_vibe(self):
+        # I told chatgpt to rewrite the function below to an analytic formula
+        # however, it doesn't work (it lied, lol)
+        # but it should be somewhat close to the truth…
+        k = self._raw_sector()
+        zone_left = (( (2*k + 1) % 8 ) / 8, ( (2*k + 3) % 8 ) / 8)
+        zone_right = (( (2*k + 2) % 8 ) / 8, ( (2*k + 4) % 8 ) / 8)
+        return zone_left, zone_right
+
+    def _calc_sector_transition_zones(self):
+        return {
             0: ((0.5, 0.75), (0.25, 0.5)),
             1: ((0.75, 1), (0.5, 0.75)),
             2: ((0, 0.25), (0.75, 1)),
             3: ((0.25, 0.5), (0, 0.25)),
         }[self._raw_sector()]
 
-        if is_in(self._raw_pos, zone_right):
-            self.cum_sector += 1
-        elif is_in(self._raw_pos, zone_left):
-            self.cum_sector -= 1
 
     def _raw_sector(self):
         # pay attention to use a `%` function that gives a positive result
