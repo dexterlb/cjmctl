@@ -4,13 +4,16 @@
 
 // Scalar operations
 float signf(float x) {
-	if (x < 0) {
+	if (signbit(x)) {
 		return -1;
 	}
 	return 1;
 }
 
 float clampf(float x, float min, float max) {
+	if (min == 0.0f && max == 0.0f) {
+		return 0.0f * x;    // retain sign (signed zero ftw)
+	}
 	if (x < min) {
 		return min;
 	}
