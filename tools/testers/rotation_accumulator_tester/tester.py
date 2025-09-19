@@ -9,10 +9,9 @@
 
 import matplotlib.pyplot as plt
 
-class MercedesRotSensor:
-    def __init__(self, storage):
-        self._storage = storage
-        self._cum_sector = storage.read_cum_sector()
+class MercedesRotAccumulator:
+    def __init__(self):
+        self.cum_sector = 0
 
     def update_raw_pos(self, raw_pos):
         self._raw_pos = raw_pos
@@ -20,7 +19,7 @@ class MercedesRotSensor:
         self._update_cum_pos()
 
     def _update_cum_pos(self):
-        jumpovers = self._cum_sector // 4
+        jumpovers = self.cum_sector // 4
         if self._raw_sector() == 0 and self._raw_pos > 0.75:
             jumpovers -= 1
         self.cum_pos = jumpovers + self._raw_pos
@@ -34,19 +33,14 @@ class MercedesRotSensor:
         }[self._raw_sector()]
 
         if is_in(self._raw_pos, zone_right):
-            self._cum_sector += 1
-            self._storage.save_cum_sector(self._cum_sector)
+            self.cum_sector += 1
         elif is_in(self._raw_pos, zone_left):
-            self._cum_sector -= 1
-            self._storage.save_cum_sector(self._cum_sector)
+            self.cum_sector -= 1
 
     def _raw_sector(self):
         # pay attention to use a `%` function that gives a positive result
         # for negative numbers, like python's
-        return self._cum_sector % 4
-
-    def save_to_storage(self):
-        self.times_saved += 1
+        return self.cum_sector % 4
 
 
 def is_in(x, interval):
@@ -80,11 +74,14 @@ def do_test(name, points, plot=False, expected_saves=None):
 
     calculated_cum_trajectory = []
     storage = FakeStorage()
-    rot_sens = MercedesRotSensor(storage)
+
+    rot_acc = MercedesRotAccumulator()
+    rot_acc.cum_sector = storage.read_cum_sector()
     for x, y in raw_trajectory:
         storage.update(x)
-        rot_sens.update_raw_pos(y)
-        calculated_cum_trajectory.append((x, rot_sens.cum_pos))
+        rot_acc.update_raw_pos(y)
+        calculated_cum_trajectory.append((x, rot_acc.cum_pos))
+        storage.save_cum_sector(rot_acc.cum_sector)
 
     err = calc_err(actual_cum_trajectory, calculated_cum_trajectory)
     num_saves = len(storage.storage_saves)
@@ -117,6 +114,9 @@ class FakeStorage:
         return self.cum_sector
 
     def save_cum_sector(self, cum_sector):
+        if cum_sector == self.cum_sector:
+            return
+
         self.cum_sector = cum_sector
         self.storage_saves.append(self.t)
 
