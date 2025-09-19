@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 class MercedesRotAccumulator:
     def __init__(self):
+        # commit this to storage instead of jumpovers
         self.cum_sector = 0
 
     def update_raw_pos(self, raw_pos):
