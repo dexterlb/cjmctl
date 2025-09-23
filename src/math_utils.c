@@ -52,7 +52,7 @@ bool is_in(float x, float a, float b) {
 }
 
 // Positive modulo for floats, like Python’s % for negative numbers
-int positive_mod(int x, int m) {
+int16_t positive_mod(int x, int m) {
 	int r = x % m;
 	return (r < 0) ? r + m : r;
 }
