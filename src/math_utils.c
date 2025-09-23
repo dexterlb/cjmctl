@@ -46,8 +46,15 @@ float fixed_to_float(uint16_t val, float min, float max) {
 	return ((float)val / 65535.0f) * (max - min) + min;
 }
 
+// Check if x is in [a,b]
 bool is_in(float x, float a, float b) {
     return (x >= a && x <= b);
+}
+
+// Positive modulo for floats, like Python’s % for negative numbers
+int positive_mod(int x, int m) {
+    int r = x % m;
+    return (r < 0) ? r + m : r;
 }
 
 // Ramps
