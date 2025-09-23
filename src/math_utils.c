@@ -46,6 +46,10 @@ float fixed_to_float(uint16_t val, float min, float max) {
 	return ((float)val / 65535.0f) * (max - min) + min;
 }
 
+bool is_in(float x, float a, float b) {
+    return (x >= a && x <= b);
+}
+
 // Ramps
 float linear_ramp_to(float x, float step, float target) {
 	step      = fabs(step);
