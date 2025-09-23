@@ -5,20 +5,20 @@
 void control_position_check_target_reached(control_position_t* cpos);
 
 void control_position_init(control_position_t* cpos, control_position_cfg_t* cfg) {
-	cpos->cfg                      = cfg;
-	cpos->pos_measured             = 0;
-	cpos->pos_target               = 0;
-	cpos->pos_err                  = 0;
-	cpos->now_us                   = 0;
-	cpos->vel_output_unshifted     = 0;
-	cpos->target_reached           = true;
-	cpos->target_reached_timestamp = 0;
+	cpos->cfg                              = cfg;
+	cpos->pos_measured                     = 0;
+	cpos->pos_target                       = 0;
+	cpos->pos_err                          = 0;
+	cpos->now_us                           = 0;
+	cpos->vel_output_unshifted             = 0;
+	cpos->target_reached                   = true;
+	cpos->target_reached_timestamp         = 0;
 	cpos->changed_direction_wait_timestamp = 0;
-	cpos->direction_changed = false;
-	cpos->vel_coast                = cfg->vel_coast;
-	cpos->vel_output               = 0;
-	cpos->paused                   = false;
-	cpos->unpause_requested        = false;
+	cpos->direction_changed                = false;
+	cpos->vel_coast                        = cfg->vel_coast;
+	cpos->vel_output                       = 0;
+	cpos->paused                           = false;
+	cpos->unpause_requested                = false;
 }
 
 void control_position_pause_if(control_position_t* cpos, bool pause) {
@@ -62,7 +62,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	}
 
 	if (cpos->target_reached) {
-		cpos->vel_output = 0;
+		cpos->vel_output           = 0;
 		cpos->vel_output_unshifted = 0;
 		return;
 	}
@@ -100,15 +100,14 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	if (new_vel_output_unshifted * cpos->vel_output_unshifted < 0) {
 		cpos->changed_direction_wait_timestamp = cpos->now_us;
-		cpos->direction_changed = true;
-		cpos->vel_output_unshifted = 0;
-		cpos->vel_output = 0;
+		cpos->direction_changed                = true;
+		cpos->vel_output_unshifted             = 0;
+		cpos->vel_output                       = 0;
 	} else {
 		cpos->vel_output_unshifted = new_vel_output_unshifted;
 		control_position_check_target_reached(cpos);
 		cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
 	}
-
 }
 
 void control_position_report_pos(control_position_t* cpos, float pos) {
@@ -148,5 +147,4 @@ void control_position_check_target_reached(control_position_t* cpos) {
 // return position on which we can stop without "brakes"
 float control_position_stop_pos(control_position_t* cpos) {
 	return cpos->pos_measured + cpos->vel_output_unshifted / cpos->cfg->pos_gain;
-	
 }
