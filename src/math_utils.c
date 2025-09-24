@@ -12,7 +12,7 @@ float signf(float x) {
 
 float clampf(float x, float min, float max) {
 	if (min == 0.0f && max == 0.0f) {
-		return 0.0f * x;    // retain sign (signed zero ftw)
+		return 0.0f * x; // retain sign (signed zero ftw)
 	}
 	if (x < min) {
 		return min;
@@ -62,12 +62,12 @@ int16_t positive_mod(int16_t x, int16_t m) {
 
 // floors towards negative infinity instead of 0 (like C's /)
 int16_t py_floor_div(int16_t a, int16_t b) {
-    int16_t q = a / b;
-    int16_t r = a % b;
-    if (r != 0 && ((a < 0) != (b < 0))) {
-        q--;
-    }
-    return q;
+	int16_t q = a / b;
+	int16_t r = a % b;
+	if (r != 0 && ((a < 0) != (b < 0))) {
+		q--;
+	}
+	return q;
 }
 
 // Ramps
