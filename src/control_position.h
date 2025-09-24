@@ -31,11 +31,11 @@ typedef struct {
 	float    vel_output_unshifted;
 	float    prop_out;
 
-	bool paused;
-	bool unpause_requested;
-	bool ptru_requested;
+	bool  paused;
+	bool  unpause_requested;
+	bool  ptru_requested;
 	float ptru_vel;
-	bool direction_changed;
+	bool  direction_changed;
 
 	// params
 	float pos_target;

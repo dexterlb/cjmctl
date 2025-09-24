@@ -14,6 +14,9 @@ float    maxf(float a, float b);
 float    minf(float a, float b);
 uint16_t float_to_fixed(float v, float min, float max);
 float    fixed_to_float(uint16_t val, float min, float max);
+bool     is_in(float x, float a, float b);
+int16_t  positive_mod(int16_t x, int16_t m);
+int16_t  py_floor_div(int16_t a, int16_t b);
 
 // Vector algebra
 void  vec3_add(float result[3], const float a[3], const float b[3]);

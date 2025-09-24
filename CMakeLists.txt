@@ -5,6 +5,7 @@ target_sources(cjmctl PRIVATE
     src/control_velocity.c
     src/estimator_velocity.c
     src/math_utils.c
+    src/rotation_accumulator.c
 )
 
 target_include_directories(cjmctl INTERFACE

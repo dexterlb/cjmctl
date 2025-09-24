@@ -45,7 +45,7 @@ void control_position_stop(control_position_t* cpos) {
 }
 
 void control_position_vel_ptru_mode(control_position_t* cpos, float vel) {
-	cpos->ptru_vel = vel;
+	cpos->ptru_vel       = vel;
 	cpos->ptru_requested = true;
 	if (vel != 0 || cpos->vel_output_unshifted != 0) {
 		cpos->target_reached = false;
@@ -119,6 +119,9 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	if (new_vel_output_unshifted * cpos->vel_output_unshifted < 0) {
 		cpos->changed_direction_wait_timestamp = cpos->now_us;
+		cpos->direction_changed                = true;
+		cpos->vel_output_unshifted             = 0;
+		cpos->vel_output                       = 0;
 		cpos->direction_changed                = true;
 		cpos->vel_output_unshifted             = 0;
 		cpos->vel_output                       = 0;
