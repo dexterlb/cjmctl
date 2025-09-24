@@ -7,19 +7,8 @@ static const float zone_right_start_per_sector[4] = {0.25f, 0.5f, 0.75f, 0.0f};
 static const float zone_right_end_per_sector[4]   = {0.5f, 0.75f, 1.0f, 0.25f};
 
 void reset_sector(rotation_accumulator_t* acc, float pos) {
-	if (is_in(pos, 0, 0.25)) {
-		acc->accum_sector = 0;
-	} else if (is_in(pos, 0.25, 0.5)) {
-		acc->accum_sector = 1;
-	} else if (is_in(pos, 0.5, 0.75)) {
-		acc->accum_sector = 2;
-	} else if (is_in(pos, 0.75, 1.0)) {
-		acc->accum_sector = 3;
-	}
-
-	// // test this tomorrow
-	// acc->accum_sector = 0;
-	// update_accum_sector(acc);
+	acc->accum_sector = 0;
+	update_accum_sector(acc);
 }
 
 int16_t raw_sector(const rotation_accumulator_t* acc) {
