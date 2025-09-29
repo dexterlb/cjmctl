@@ -6,11 +6,6 @@ static const float zone_left_end_per_sector[4]    = {0.75f, 1.0f, 0.25f, 0.5f};
 static const float zone_right_start_per_sector[4] = {0.25f, 0.5f, 0.75f, 0.0f};
 static const float zone_right_end_per_sector[4]   = {0.5f, 0.75f, 1.0f, 0.25f};
 
-void reset_sector(rotation_accumulator_t* acc, float pos) {
-	acc->accum_sector = 0;
-	update_accum_sector(acc);
-}
-
 int16_t raw_sector(const rotation_accumulator_t* acc) {
 	return positive_mod(acc->accum_sector, 4);
 }
@@ -58,4 +53,9 @@ void rotation_accumulator_update_raw_pos(rotation_accumulator_t* acc, float raw_
 	acc->raw_pos = raw_pos;
 	update_accum_sector(acc);
 	update_accum_pos(acc);
+}
+
+void reset_sector(rotation_accumulator_t* acc) {
+	acc->accum_sector = 0;
+	update_accum_sector(acc);
 }

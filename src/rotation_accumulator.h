@@ -9,4 +9,4 @@ typedef struct {
 
 void rotation_accumulator_init(rotation_accumulator_t* acc, int16_t sector);
 void rotation_accumulator_update_raw_pos(rotation_accumulator_t* acc, float raw_pos);
-void reset_sector(rotation_accumulator_t* acc, float pos);
+void reset_sector(rotation_accumulator_t* acc);
