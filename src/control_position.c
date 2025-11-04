@@ -102,11 +102,14 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 
 	float new_vel_output_unshifted = 0;
 	if (cpos->ptru_requested) {
-		new_vel_output_unshifted = linear_ramp_to(
+		cpos->vel_output_unshifted = linear_ramp_to(
 			cpos->vel_output_unshifted,
 			cpos->cfg->acceleration * dt,
 			cpos->ptru_vel
 		);
+		control_position_check_target_reached(cpos);
+		cpos->vel_output = cpos->vel_output_unshifted;
+		return;
 	} else if (fabs(cpos->prop_out) > fabs(cpos->vel_output_unshifted) || cpos->prop_out * cpos->vel_output_unshifted < 0) {
 		new_vel_output_unshifted = linear_ramp_to(
 			cpos->vel_output_unshifted,
