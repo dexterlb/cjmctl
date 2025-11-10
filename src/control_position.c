@@ -104,7 +104,9 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	if (cpos->ptru_requested) {
 		// subtract vel_min from ptru_vel as it is added when calculating vel_output
 		float target = 0;
-		if(fabs(cpos->ptru_vel) < cpos->cfg->vel_min) {
+		if (cpos->ptru_vel == 0) {
+			target = 0;
+		} else if(fabs(cpos->ptru_vel) < cpos->cfg->vel_min) {
 			target = cpos->cfg->vel_min * signf(cpos->ptru_vel);
 		} else {
 			target = cpos->ptru_vel - cpos->cfg->vel_min * signf(cpos->ptru_vel);
