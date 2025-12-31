@@ -151,8 +151,17 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel) {
 
 void control_position_target_pos(control_position_t* cpos, float pos) {
 	cpos->pos_target     = pos;
+	control_position_reset_target_reached(cpos);
+}
+
+void control_position_reset_target_reached(control_position_t* cpos) {
 	cpos->target_reached = false;
 	cpos->ptru_requested = false;
+	control_position_reset_target_reached_timer(cpos);
+}
+
+void control_position_reset_target_reached_timer(control_position_t* cpos) {
+	cpos->target_reached_timestamp = cpos->now_us;
 }
 
 void control_position_check_target_reached(control_position_t* cpos) {
@@ -171,7 +180,7 @@ void control_position_check_target_reached(control_position_t* cpos) {
 
 	if (fabs(cpos->pos_measured - cpos->pos_target) >= window) {
 		// we aren't close enough to the target
-		cpos->target_reached_timestamp = cpos->now_us;
+		control_position_reset_target_reached_timer(cpos);
 		return;
 	}
 
