@@ -6,6 +6,7 @@ extern "C" {
 
 #include <math.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 // Scalar utils
 float    signf(float x);
