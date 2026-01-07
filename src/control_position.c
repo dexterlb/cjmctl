@@ -134,7 +134,11 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	} else {
 		cpos->vel_output_unshifted = new_vel_output_unshifted;
 		control_position_check_target_reached(cpos);
-		cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
+		if (fabs(cpos->pos_measured - cpos->pos_target) < cpos->cfg->target_stop_window) {
+			cpos->vel_output = 0;
+		} else {
+			cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
+		}
 	}
 }
 
