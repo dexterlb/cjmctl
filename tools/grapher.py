@@ -282,7 +282,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         cfg = parse_cfg(sys.argv[1])
         fp = FrameParser(cfg)
-        gen = fp.frames_from_stdin
+        gen = fp.frames_from_stdin()
     elif len(sys.argv) == 3:
         cfg = parse_cfg(sys.argv[1])
         fp = FrameParser(cfg)
