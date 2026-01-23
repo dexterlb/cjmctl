@@ -20,6 +20,8 @@ import traceback
 import strictyaml
 import csv
 import tkinter as tk
+import fcntl
+import select
 from functools import wraps
 
 from matplotlib import pyplot as plt
@@ -71,25 +73,27 @@ class FrameParser:
         except:
             return s.strip()
 
-    def read_line_from_stream(self, ser):
-        s = ''
-        while True:
-            c = ser.read(1)
-            if type(c) is not str:
-                try:
-                    c = c.decode('ascii')
-                except:
-                    c = '?'
-            s += c
-            if c in ('\r', '\n'):
-                return s
-
     def frames_from_stream(self, f):
+        fd = f.fileno()
+        fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
+
         while True:
-            line = self.read_line_from_stream(f)
-            dataline = self.parse_meas_line(line)
-            if dataline:
-                yield [dataline]
+            ready, _, _ = select.select([f], [], [])
+
+            if ready:
+                try:
+                    data = f.read()
+                    if data:
+                        lines = self._get_lines(data)
+                        datalines = (self.parse_meas_line(line) for line in lines)
+                        ok_datalines = [dl for dl in datalines if dl]
+                        yield ok_datalines
+                    else:
+                        break  # EOF
+                except BlockingIOError:
+                    pass
+            else:
+                pass
 
     def frames_from_serial(self, port):
         try:
@@ -146,7 +150,7 @@ class FrameParser:
                 yield ok_datalines
 
     def _get_lines(self, data):
-        s = self._line_remnant + data.decode('utf-8', errors='ignore')
+        s = self._line_remnant + (data.decode('utf-8', errors='ignore') if type(data) is not str else data)
         lines = s.splitlines()
         if s.endswith('\r') or s.endswith('\n'):
             self._line_remnant = ''
