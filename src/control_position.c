@@ -22,6 +22,16 @@ void control_position_init(control_position_t* cpos, const control_position_cfg_
 	cpos->ptru_requested                   = false;
 }
 
+bool is_in_target_reached_window(control_position_t *cpos) {
+	float dist_to_target = fabs(cpos->pos_measured - cpos->pos_target);
+	float window = cpos->cfg->target_reached_window;
+	if (window == 0.0f) {
+		// unreachable window provided
+		return false;
+	}
+	return dist_to_target < window;
+}
+
 void control_position_pause_if(control_position_t* cpos, bool pause) {
 	if (pause) {
 		control_position_pause(cpos);
@@ -152,13 +162,15 @@ void control_position_set_coast_vel(control_position_t* cpos, float vel) {
 
 void control_position_target_pos(control_position_t* cpos, float pos) {
 	cpos->pos_target     = pos;
+	if(cpos->target_reached && is_in_target_reached_window(cpos)){
+		return;
+	}
 	control_position_reset_target_reached(cpos);
 }
 
 void control_position_reset_target_reached(control_position_t* cpos) {
 	cpos->target_reached = false;
 	cpos->ptru_requested = false;
-	control_position_check_target_reached(cpos);
 	control_position_reset_target_reached_timer(cpos);
 }
 
@@ -174,13 +186,7 @@ void control_position_check_target_reached(control_position_t* cpos) {
 		return;
 	}
 
-	float window = cpos->cfg->target_reached_window;
-	if (window == 0.0f) {
-		// user requested to never testify that target is reached
-		return;
-	}
-
-	if (fabs(cpos->pos_measured - cpos->pos_target) >= window) {
+	if(!is_in_target_reached_window(cpos)) {
 		// we aren't close enough to the target
 		control_position_reset_target_reached_timer(cpos);
 		return;
