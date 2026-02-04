@@ -153,6 +153,7 @@ void control_position_target_pos(control_position_t* cpos, float pos) {
 	cpos->pos_target     = pos;
 	cpos->target_reached = false;
 	cpos->ptru_requested = false;
+	control_position_check_target_reached(cpos);
 }
 
 void control_position_check_target_reached(control_position_t* cpos) {
