@@ -13,6 +13,7 @@ typedef struct {
 	float pos_gain;
 	float acceleration;
 
+	float    target_stop_window;    // stop (vel := 0) when within this distance of target
 	float    target_reached_window; // use 0 to never assume target is reached
 	uint32_t changed_direction_wait_us;
 	uint32_t target_reached_time_us; // timestamp must be small enough so that we don't leave the window
@@ -61,6 +62,9 @@ void control_position_stop(control_position_t* cpos);
 void control_position_vel_ptru_mode(control_position_t* cpos, float vel);
 
 float control_position_stop_pos(const control_position_t* cpos);
+
+void control_position_reset_target_reached_timer(control_position_t* cpos);
+void control_position_reset_target_reached(control_position_t* cpos);
 
 #ifdef __cplusplus
 }
