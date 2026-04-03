@@ -117,7 +117,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		if (cpos->ptru_vel == 0) {
 			target = 0;
 		} else if(fabs(cpos->ptru_vel) < cpos->cfg->vel_min) {
-			target = cpos->cfg->vel_min * signf(cpos->ptru_vel);
+			target = 0 * signf(cpos->ptru_vel); // yes, signed zero is cursed, but I like satan
 		} else {
 			target = cpos->ptru_vel - cpos->cfg->vel_min * signf(cpos->ptru_vel);
 		}
