@@ -117,7 +117,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		if (cpos->ptru_vel == 0) {
 			target = 0;
 		} else if(fabs(cpos->ptru_vel) < cpos->cfg->vel_min) {
-			target = cpos->cfg->vel_min * signf(cpos->ptru_vel);
+			target = 0 * signf(cpos->ptru_vel); // yes, signed zero is cursed, but I like satan
 		} else {
 			target = cpos->ptru_vel - cpos->cfg->vel_min * signf(cpos->ptru_vel);
 		}
@@ -144,7 +144,7 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	} else {
 		cpos->vel_output_unshifted = new_vel_output_unshifted;
 		control_position_check_target_reached(cpos);
-		if (fabs(cpos->pos_measured - cpos->pos_target) < cpos->cfg->target_stop_window) {
+		if (!cpos->ptru_requested && fabs(cpos->pos_measured - cpos->pos_target) < cpos->cfg->target_stop_window) {
 			cpos->vel_output = 0;
 		} else {
 			cpos->vel_output = cpos->vel_output_unshifted + cpos->cfg->vel_min * signf(cpos->vel_output_unshifted);
