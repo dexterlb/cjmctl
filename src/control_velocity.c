@@ -88,10 +88,12 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 		// be averaged before we begin ramping it down
 		float time_elapsed_in_rest = calc_dt_from_timestamps_us(cvel->rest_timer, now_us);
 		if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout) {
-			cvel->torque_output         = cvel->rest_integral / (cvel->rest_timer * 0.3);
+			// the torque output is the average torque during the last 30% of the timeout
+			cvel->torque_output         = cvel->rest_integral / (cvel->cfg->rest_timeout * 0.3);
 			cvel->is_stopped            = true;
 			cvel->stable_start_achieved = false;
 		} else if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout * 0.7) {
+			// start integrating when we are in the last 30% of the timeout
 			cvel->rest_integral += cvel->torque_output * dt;
 		}
 	}
