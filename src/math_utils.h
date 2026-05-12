@@ -10,6 +10,7 @@ extern "C" {
 
 // Scalar utils
 float    signf(float x);
+float    mag_clampf(float x, float max);
 float    clampf(float x, float min, float max);
 float    maxf(float a, float b);
 float    minf(float a, float b);

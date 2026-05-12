@@ -10,6 +10,10 @@ float signf(float x) {
 	return 1;
 }
 
+float mag_clampf(float x, float max) {
+	return clampf(x, -max, max);
+}
+
 float clampf(float x, float min, float max) {
 	if (min == 0.0f && max == 0.0f) {
 		return 0.0f * x; // retain sign (signed zero ftw)
