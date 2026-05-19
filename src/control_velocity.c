@@ -96,7 +96,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 		cvel->vel_target      = 0;
 		cvel->vel_err         = 0;
 
-		// smoothly rampdown integral torque to avoid jerky motion when stopping
+		// smoothly rampdown integral torque to avoid jerky motion when going limp
 		cvel->integral_torque = linear_ramp_to(
 			cvel->integral_torque,
             cvel->cfg->torque_rampdown_speed * dt,
