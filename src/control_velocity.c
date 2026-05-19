@@ -13,10 +13,10 @@ void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg
 	cvel->stable_start_achieved = false;
 	cvel->now_us                = 0;
 	cvel->rest_timer            = 0;
-	cvel->rest_integral         = 0;
 	cvel->ramp_speed            = INFINITY;
 	cvel->paused                = false;
 	cvel->unpause_requested     = false;
+	cvel->force_start_requested = false;
 }
 
 void control_velocity_pause_if(control_velocity_t* cpos, bool pause) {
@@ -78,36 +78,31 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	}
 
 	// see if we should get out of a stopped state
-	if (minf(fabs(cvel->vel_target), fabs(cvel->vel_target_preramp)) >= vel_min) {
+	if (cvel->force_start_requested || minf(fabs(cvel->vel_target), fabs(cvel->vel_target_preramp)) >= vel_min) {
 		cvel->is_stopped    = false;
 		cvel->rest_timer    = now_us;
-		cvel->rest_integral = 0;
 	} else {
-		// a very overengineered solution to ramping down torque when stopping
-		// since torque goes up and down a lot while holding position, it must
-		// be averaged before we begin ramping it down
 		float time_elapsed_in_rest = calc_dt_from_timestamps_us(cvel->rest_timer, now_us);
 		if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout) {
-			// the torque output is the average torque during the last 30% of the timeout
-			cvel->torque_output         = cvel->rest_integral / (cvel->cfg->rest_timeout * 0.3);
 			cvel->is_stopped            = true;
 			cvel->stable_start_achieved = false;
-		} else if (!cvel->is_stopped && time_elapsed_in_rest > cvel->cfg->rest_timeout * 0.7) {
-			// start integrating when we are in the last 30% of the timeout
-			cvel->rest_integral += cvel->torque_output * dt;
 		}
 	}
+
+	cvel->force_start_requested = false;
 
 	// go limp if we're stopped
 	if (cvel->is_stopped) {
 		cvel->vel_target      = 0;
 		cvel->vel_err         = 0;
-		cvel->integral_torque = 0;
-		cvel->torque_output   = linear_ramp_to(
-            cvel->torque_output,
+
+		// smoothly rampdown integral torque to avoid jerky motion when stopping
+		cvel->integral_torque = linear_ramp_to(
+			cvel->integral_torque,
             cvel->cfg->torque_rampdown_speed * dt,
             0
         );
+        cvel->torque_output = cvel->integral_torque;
 		return;
 	}
 
@@ -164,4 +159,8 @@ void control_velocity_report_vel(control_velocity_t* cvel, float vel) {
 void control_velocity_target_vel(control_velocity_t* cvel, float vel, float ramp_speed) {
 	cvel->vel_target_preramp = vel;
 	cvel->ramp_speed         = ramp_speed;
+}
+
+void control_velocity_force_start(control_velocity_t* cvel) {
+	cvel->force_start_requested = true;
 }
