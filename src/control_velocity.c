@@ -139,7 +139,7 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	// determine max torque
 	float torque_max = cvel->cfg->torque_max;
 
-	if (!cvel->is_stopped && fabs(cvel->vel_measured) > cvel->cfg->stable_start_vel_thresh) {
+	if (!cvel->is_stopped && cvel->vel_measured * signf(cvel->vel_target) > cvel->cfg->stable_start_vel_thresh) {
 		cvel->stable_start_achieved = true;
 	}
 
