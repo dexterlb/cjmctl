@@ -34,13 +34,13 @@ typedef struct {
 	// state
 	float    vel_err;
 	float    rest_timer;
-	float    rest_integral;
 	float    integral_torque;
 	uint32_t now_us;
 	bool     stable_start_achieved;
 
 	bool paused;
 	bool unpause_requested;
+	bool force_start_requested;
 
 	// params
 	float vel_target;
@@ -62,11 +62,15 @@ typedef struct {
 // structure and use them to control the motor.
 // Call control_velocity_target_vel() when you want to change velocity
 // If you don't want to ramp, use INFINITY as ramp_speed.
+// You generally don't need to call control_velocity_force_start() explicitly, unless you
+// want to force the velocity controller to act even if the target velocity is zero
+// (for example you want to use active braking).
 
 void control_velocity_init(control_velocity_t* cvel, control_velocity_cfg_t* cfg);
 void control_velocity_update(control_velocity_t* cvel, uint32_t now_us);
 void control_velocity_report_vel(control_velocity_t* cvel, float vel);
 void control_velocity_target_vel(control_velocity_t* cvel, float vel, float ramp_speed);
+void control_velocity_force_start(control_velocity_t* cvel);
 
 void control_velocity_pause_if(control_velocity_t* cvel, bool pause);
 void control_velocity_pause(control_velocity_t* cvel);
