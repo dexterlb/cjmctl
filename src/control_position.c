@@ -54,6 +54,11 @@ void control_position_stop(control_position_t* cpos) {
 	control_position_vel_ptru_mode(cpos, 0);
 }
 
+void control_position_hard_stop(control_position_t* cpos) {
+	control_position_vel_ptru_mode(cpos, 0);
+	cpos->vel_output_unshifted = 0;
+}
+
 void control_position_vel_ptru_mode(control_position_t* cpos, float vel) {
 	cpos->ptru_vel       = vel;
 	cpos->ptru_requested = true;
