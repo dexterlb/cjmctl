@@ -62,6 +62,7 @@ void control_position_stop(control_position_t* cpos);
 void control_position_vel_ptru_mode(control_position_t* cpos, float vel);
 
 float control_position_stop_pos(const control_position_t* cpos);
+void control_position_hard_stop(control_position_t* cpos);
 
 void control_position_reset_target_reached_timer(control_position_t* cpos);
 void control_position_reset_target_reached(control_position_t* cpos);
