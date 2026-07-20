@@ -12,6 +12,7 @@ typedef struct {
 
 	float pos_gain;
 	float acceleration;
+	float deceleration;
 
 	float    target_stop_window;    // stop (vel := 0) when within this distance of target
 	float    target_reached_window; // use 0 to never assume target is reached

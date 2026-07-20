@@ -67,6 +67,16 @@ void control_position_vel_ptru_mode(control_position_t* cpos, float vel) {
 	}
 }
 
+float acceleration_ramp(control_position_t* cpos, float dt, float x, float target) {
+	float acceleration;
+	if (x < target) {
+		acceleration = cpos->cfg->acceleration;
+	} else {
+		acceleration = cpos->cfg->deceleration;
+	}
+	return linear_ramp_to(x, acceleration * dt, target);
+}
+
 void control_position_update(control_position_t* cpos, uint32_t now_us) {
 	float dt     = calc_dt_from_timestamps_us(cpos->now_us, now_us);
 	cpos->now_us = now_us;
@@ -126,15 +136,15 @@ void control_position_update(control_position_t* cpos, uint32_t now_us) {
 		} else {
 			target = cpos->ptru_vel - cpos->cfg->vel_min * signf(cpos->ptru_vel);
 		}
-		new_vel_output_unshifted = linear_ramp_to(
+		new_vel_output_unshifted = acceleration_ramp(
+			cpos, dt,
 			cpos->vel_output_unshifted,
-			cpos->cfg->acceleration * dt,
 			target
 		);
 	} else if (fabs(cpos->prop_out) > fabs(cpos->vel_output_unshifted) || cpos->prop_out * cpos->vel_output_unshifted < 0) {
-		new_vel_output_unshifted = linear_ramp_to(
+		new_vel_output_unshifted = acceleration_ramp(
+			cpos, dt,
 			cpos->vel_output_unshifted,
-			cpos->cfg->acceleration * dt,
 			cpos->prop_out
 		);
 	} else {
