@@ -121,9 +121,9 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	}
 
 	cvel->integral_torque += dt * cvel->vel_err * int_gain;
-	cvel->integral_torque = clampf(
+	cvel->integral_torque = mag_clampf(
 		cvel->integral_torque,
-		-cvel->cfg->vel_integral_torque_limit, cvel->cfg->vel_integral_torque_limit
+		cvel->cfg->vel_integral_torque_limit
 	);
 
 	float int_torque = cvel->integral_torque;
@@ -144,6 +144,9 @@ void control_velocity_update(control_velocity_t* cvel, uint32_t now_us) {
 	}
 
 	out = clampf(out, -torque_max, torque_max);
+
+	// don't allow accumulating an integral that is greater than torque_max
+	cvel->integral_torque = mag_clampf(cvel->integral_torque, torque_max);
 
 	// we're done
 	cvel->torque_output = out;
