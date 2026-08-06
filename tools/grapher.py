@@ -221,6 +221,8 @@ class GraphAnimator():
         if len(reset_keys) > 0:
             for k in reset_keys:
                 ax = self.get_subplot(k)
+                if ax is None:
+                    continue
                 self.plots[k], = ax.plot(
                     self.timestamp_sequences[k],
                     self.val_sequences[k],
@@ -233,6 +235,8 @@ class GraphAnimator():
                 ax.set_prop_cycle('color', colours)
 
         for k in updated_keys - reset_keys:
+            if k not in self.plots:
+                continue
             self.plots[k].set_data(self.timestamp_sequences[k], self.val_sequences[k])
             self.plots[k].set_label(k + ': ' + str(self.val_sequences[k][-1]))
 
@@ -247,7 +251,6 @@ class GraphAnimator():
         for i, r in enumerate(self.subplot_regexes):
             if r.search(k):
                 return self.subplots[i]
-        raise RuntimeError(f'no subplot that matches value {k}')
 
     def animate(self):
         anim = animation.FuncAnimation(
